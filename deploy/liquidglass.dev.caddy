@@ -1,0 +1,33 @@
+# liquidglass.dev — static site. Installed as /etc/caddy/sites/liquidglass.dev.caddy,
+# files synced to /var/www/liquidglass.dev by scripts/deploy.sh.
+liquidglass.dev {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Other sites import the components as ES modules, and module scripts are always fetched
+	# in CORS mode: without this header every cross-origin import fails.
+	@lib path /lib/*
+	header @lib {
+		Access-Control-Allow-Origin "*"
+		Cache-Control "public, max-age=3600"
+	}
+
+	@static path /assets/* /images/*
+	header @static Cache-Control "public, max-age=86400"
+
+	@pages path / /docs/ *.html
+	header @pages Cache-Control "no-cache"
+
+	root * /var/www/liquidglass.dev
+	file_server
+}
+
+www.liquidglass.dev {
+	redir https://liquidglass.dev{uri} permanent
+}

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Glass for the Web — real refraction in every browser</title>
+<meta name="description" content="Web components that bend light like Apple's Liquid Glass, rendered live in Chrome, Safari and Firefox. One script tag, zero dependencies.">
+<meta property="og:title" content="Liquid Glass for the Web">
+<meta property="og:description" content="Real refraction in Chrome, Safari and Firefox. Switches, sliders, navbars, menus, toasts and more.">
+<meta property="og:image" content="https://liquidglass.dev/images/beach-1200.jpg">
+<meta property="og:url" content="https://liquidglass.dev/">
+<meta name="theme-color" content="#f8f9fa">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="modulepreload" href="lib/liquid-glass.js">
+<link rel="modulepreload" href="lib/components.js">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <lg-navbar tone="light" aria-label="Site">
+    <a href="#top" data-i18n="nav.home">Home</a>
+    <a href="#components" data-i18n="nav.components">Components</a>
+    <a href="#playground" data-i18n="nav.playground">Playground</a>
+    <a href="#start" data-i18n="nav.start">Get started</a>
+    <a href="docs/" data-i18n="nav.docs">Docs</a>
+  </lg-navbar>
+</div>
+
+<main id="top">
+  <!-- ============================================================ hero -->
+  <section class="hero container" aria-labelledby="hero-title">
+    <div class="stage hero__stage" id="hero" data-lg-backdrop=".hero__img">
+      <lg-lens class="hero__lens" width="220" height="220" x="74" y="38" refraction="30" chroma="0.18" specular="0.6">
+        <img class="hero__img" src="images/beach-1200.jpg" srcset="images/beach-1200.jpg 1200w, images/beach.jpg 2400w" sizes="(max-width: 1248px) 100vw, 1200px" alt="Turquoise bay between white cliffs">
+      </lg-lens>
+
+      <div class="hero__bar">
+        <lg-panel class="brand-chip" tone="light" radius="22">
+          <a class="brand" href="./" aria-label="liquidglass home"><svg aria-hidden="true"><use href="assets/icons.svg#droplet"/></svg>liquidglass</a>
+        </lg-panel>
+        <lg-navbar tone="light" aria-label="Primary">
+          <a href="#components" data-i18n="nav.components">Components</a>
+          <a href="#playground" data-i18n="nav.playground">Playground</a>
+          <a href="docs/" data-i18n="nav.docs">Docs</a>
+          <a href="https://github.com/gentpan/liquidglass">GitHub</a>
+        </lg-navbar>
+        <lg-segmented class="lang-switch" label="Language" id="lang-switch">
+          <button value="en">EN</button>
+          <button value="zh">中文</button>
+        </lg-segmented>
+      </div>
+
+      <lg-panel class="hero__copy" tone="light" radius="24" refraction="28">
+        <span class="hero__eyebrow"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#sparkles"/></svg><span data-i18n="hero.eyebrow">Web components · v1.0</span></span>
+        <h1 class="hero__title" id="hero-title" data-i18n="hero.title">Real liquid glass.<br>In every browser.</h1>
+        <p class="hero__lede" data-i18n="hero.lede">Glass that actually bends light, like Apple’s Liquid Glass, rendered live in Chrome, Safari and Firefox. One script tag, zero dependencies.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#start"><span data-i18n="hero.cta1">Get started</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+          <a class="btn btn--secondary" href="#components" data-i18n="hero.cta2">Explore components</a>
+        </div>
+      </lg-panel>
+
+      <lg-panel class="hero__hint" tone="light" radius="18">
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#pointer"/></svg><span data-i18n="hero.hint">Move over the photo to steer the lens</span>
+      </lg-panel>
+    </div>
+  </section>
+
+  <!-- ============================================================ showcase -->
+  <section class="section container" id="components" aria-labelledby="components-title">
+    <header class="section__head">
+      <span class="section__eyebrow" data-i18n="sc.eyebrow">Components</span>
+      <h2 id="components-title" data-i18n="sc.title">Everything here is live. Go ahead, touch it.</h2>
+      <p class="section__lede" data-i18n="sc.lede">Eleven custom elements built on one refraction engine. The real controls stay native underneath, so keyboards, screen readers and forms keep working.</p>
+    </header>
+
+    <div class="showcase">
+      <!-- desktop -->
+      <article class="showcase__item showcase__item--wide">
+        <div class="stage showcase__stage scene-desktop" data-lg-backdrop=".stage__img">
+          <img class="stage__img" src="images/city-1200.jpg" srcset="images/city-1200.jpg 1200w, images/city.jpg 2400w" sizes="(max-width: 1248px) 100vw, 1200px" alt="Shanghai skyline at dusk" loading="lazy">
+          <lg-menubar>
+            <span class="menubar__brand"><svg aria-hidden="true"><use href="assets/icons.svg#droplet"/></svg>Glass</span>
+            <lg-menu label="File">
+              <button data-shortcut="⌘N">New Window</button>
+              <button data-shortcut="⌘O">Open…</button>
+              <button data-shortcut="⇧⌘S">Save As…</button>
+              <hr>
+              <button data-shortcut="⌘W">Close Window</button>
+            </lg-menu>
+            <lg-menu label="Edit">
+              <button data-shortcut="⌘Z">Undo</button>
+              <button data-shortcut="⇧⌘Z">Redo</button>
+              <hr>
+              <button data-shortcut="⌘X">Cut</button>
+              <button data-shortcut="⌘C">Copy</button>
+              <button data-shortcut="⌘V">Paste</button>
+            </lg-menu>
+            <lg-menu label="View">
+              <button data-shortcut="⌥⌘S">Show Sidebar</button>
+              <button data-shortcut="⌃⌘F">Enter Full Screen</button>
+            </lg-menu>
+            <lg-menu label="Window">
+              <button data-shortcut="⌘M">Minimize</button>
+              <button>Zoom</button>
+              <hr>
+              <button>Bring All to Front</button>
+            </lg-menu>
+            <span class="menubar__spacer"></span>
+            <span class="menubar__status">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#wifi"/></svg>
+              <svg class="icon optional" aria-hidden="true"><use href="assets/icons.svg#battery"/></svg>
+              <span class="optional" data-clock>Fri 9:41</span>
+            </span>
+          </lg-menubar>
+          <lg-dock aria-label="Dock">
+            <button class="app-icon app-icon--mail" aria-label="Mail"><svg><use href="assets/icons.svg#mail"/></svg></button>
+            <button class="app-icon app-icon--messages" aria-label="Messages"><svg><use href="assets/icons.svg#message"/></svg></button>
+            <button class="app-icon app-icon--music" aria-label="Music"><svg><use href="assets/icons.svg#music"/></svg></button>
+            <button class="app-icon app-icon--photos" aria-label="Photos"><svg><use href="assets/icons.svg#image"/></svg></button>
+            <button class="app-icon app-icon--maps" aria-label="Maps"><svg><use href="assets/icons.svg#map"/></svg></button>
+            <button class="app-icon app-icon--calendar" aria-label="Calendar"><svg><use href="assets/icons.svg#calendar"/></svg></button>
+            <button class="app-icon app-icon--notes" aria-label="Notes"><svg><use href="assets/icons.svg#note"/></svg></button>
+            <button class="app-icon app-icon--settings" aria-label="Settings"><svg><use href="assets/icons.svg#settings"/></svg></button>
+          </lg-dock>
+        </div>
+        <div class="showcase__caption">
+          <div>
+            <h3><span data-i18n="sc.desktop.title">Menu bar and Dock</span> <code class="inline">&lt;lg-menubar&gt;</code> <code class="inline">&lt;lg-dock&gt;</code></h3>
+            <p data-i18n="sc.desktop.text">Menus drop open as glass panels with a sliding highlight. Hover the Dock: its lens magnifies whatever sits underneath.</p>
+          </div>
+          <a href="docs/#menubar"><span data-i18n="sc.docs">Docs</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+        </div>
+      </article>
+
+      <!-- notifications -->
+      <article class="showcase__item">
+        <div class="stage showcase__stage scene-notify stage--dark" id="notify-stage" data-lg-backdrop=".stage__img">
+          <img class="stage__img" src="images/portrait-1200.jpg" srcset="images/portrait-1200.jpg 1200w, images/portrait.jpg 2400w" sizes="(max-width: 800px) 100vw, 600px" alt="Woman in a blue dress on a beach at sunset" loading="lazy">
+          <lg-button class="notify-trigger" id="notify-trigger"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#bell"/></svg>Send a notification</lg-button>
+          <lg-panel class="player" radius="24">
+            <div class="player__row">
+              <img class="player__art" src="images/anime-1200.jpg" alt="" loading="lazy">
+              <div class="player__meta"><b>Blue Hour</b><span>Liquid Sessions</span></div>
+            </div>
+            <lg-slider value="38" label="Playback position"></lg-slider>
+            <div class="player__controls">
+              <button aria-label="Previous"><svg><use href="assets/icons.svg#skip-back"/></svg></button>
+              <button aria-label="Pause"><svg><use href="assets/icons.svg#pause"/></svg></button>
+              <button aria-label="Next"><svg><use href="assets/icons.svg#skip-forward"/></svg></button>
+            </div>
+          </lg-panel>
+        </div>
+        <div class="showcase__caption">
+          <div>
+            <h3><span data-i18n="sc.notify.title">Toasts and panels</span> <code class="inline">toast()</code></h3>
+            <p data-i18n="sc.notify.text">Toasts drop in on a spring and stretch as they land. Panels frost and bend the photo behind them.</p>
+          </div>
+          <a href="docs/#toast"><span data-i18n="sc.docs">Docs</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+        </div>
+      </article>
+
+      <!-- control centre -->
+      <article class="showcase__item">
+        <div class="stage showcase__stage scene-control stage--dark" data-lg-backdrop=".stage__img">
+          <img class="stage__img" src="images/anime-1200.jpg" srcset="images/anime-1200.jpg 1200w, images/anime.jpg 2400w" sizes="(max-width: 800px) 100vw, 600px" alt="Anime village street with a cherry tree" loading="lazy">
+          <lg-panel class="cc" radius="24">
+            <div class="cc__title">Control Centre</div>
+            <div class="cc__rows">
+              <lg-switch checked><svg aria-hidden="true"><use href="assets/icons.svg#wifi"/></svg>Wi-Fi</lg-switch>
+              <lg-switch checked><svg aria-hidden="true"><use href="assets/icons.svg#bluetooth"/></svg>Bluetooth</lg-switch>
+              <lg-switch><svg aria-hidden="true"><use href="assets/icons.svg#moon"/></svg>Focus</lg-switch>
+            </div>
+            <div class="cc__label"><span>Display</span><span data-brightness>70%</span></div>
+            <lg-slider value="70" label="Display brightness" id="brightness"></lg-slider>
+            <lg-segmented label="Appearance" value="auto">
+              <button value="light">Light</button>
+              <button value="dark">Dark</button>
+              <button value="auto">Auto</button>
+            </lg-segmented>
+          </lg-panel>
+        </div>
+        <div class="showcase__caption">
+          <div>
+            <h3><span data-i18n="sc.control.title">Switch, slider, segmented</span></h3>
+            <p data-i18n="sc.control.text">Press and hold: thumbs turn from solid white into glass and squish under your finger, like on iOS.</p>
+          </div>
+          <a href="docs/#switch"><span data-i18n="sc.docs">Docs</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+        </div>
+      </article>
+
+      <!-- game -->
+      <article class="showcase__item">
+        <div class="stage showcase__stage scene-game stage--dark" data-lg-backdrop=".stage__img">
+          <img class="stage__img" src="images/game-1200.jpg" srcset="images/game-1200.jpg 1200w, images/game.jpg 2400w" sizes="(max-width: 800px) 100vw, 600px" alt="Fantasy archer in blue light" loading="lazy">
+          <lg-navbar aria-label="Game menu">
+            <button aria-current="page">Play</button>
+            <button>Champions</button>
+            <button>Store</button>
+            <button>Profile</button>
+          </lg-navbar>
+          <div class="hud">
+            <lg-button tone="tinted"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#play"/></svg>Find match</lg-button>
+            <lg-button>Loadout</lg-button>
+          </div>
+          <lg-panel class="hud__mode" radius="16"><b>Ranked Solo</b><span>Queue 0:42</span></lg-panel>
+        </div>
+        <div class="showcase__caption">
+          <div>
+            <h3><span data-i18n="sc.game.title">Navbar and buttons</span> <code class="inline">&lt;lg-navbar&gt;</code></h3>
+            <p data-i18n="sc.game.text">A glass indicator glides to whatever you point at, stretching with its speed. Buttons squish when pressed.</p>
+          </div>
+          <a href="docs/#navbar"><span data-i18n="sc.docs">Docs</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+        </div>
+      </article>
+
+      <!-- lens -->
+      <article class="showcase__item">
+        <div class="stage showcase__stage scene-lens">
+          <lg-lens width="240" height="150" radius="75" x="20" y="78" refraction="34" chroma="0.22" specular="0.7">
+            <img src="images/wave-1200.jpg" srcset="images/wave-1200.jpg 1200w, images/wave.jpg 2400w" sizes="(max-width: 800px) 100vw, 600px" alt="Flowing rainbow lines on black" loading="lazy">
+            <p class="lens-type">Bend anything.<span>Text under the lens stays selectable.</span></p>
+          </lg-lens>
+        </div>
+        <div class="showcase__caption">
+          <div>
+            <h3><span data-i18n="sc.lens.title">Lens</span> <code class="inline">&lt;lg-lens&gt;</code></h3>
+            <p data-i18n="sc.lens.text">Wrap any content and a lens follows the pointer. Everything outside it is the original DOM, untouched.</p>
+          </div>
+          <a href="docs/#lens"><span data-i18n="sc.docs">Docs</span><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================ playground -->
+  <section class="section container" id="playground" aria-labelledby="playground-title">
+    <header class="section__head">
+      <span class="section__eyebrow" data-i18n="pg.eyebrow">Playground</span>
+      <h2 id="playground-title" data-i18n="pg.title">Shape the glass.</h2>
+      <p class="section__lede" data-i18n="pg.lede">Every lens is drawn from a displacement map generated for its shape. Change the optics and watch the map redraw, then copy the markup.</p>
+    </header>
+    <div class="playground">
+      <div class="stage playground__stage">
+        <lg-lens id="pg-lens" width="240" height="160" radius="80" x="52" y="48">
+          <img src="images/anime-1200.jpg" srcset="images/anime-1200.jpg 1200w, images/anime.jpg 2400w" sizes="(max-width: 900px) 100vw, 820px" alt="Anime village street with a cherry tree" loading="lazy">
+        </lg-lens>
+      </div>
+      <div class="playground__side">
+        <canvas class="playground__map" id="pg-map" aria-label="Displacement map preview"></canvas>
+        <div class="playground__maplabel"><span data-i18n="pg.map">Displacement map</span><span data-i18n="pg.channels">R, G bend · B highlight</span></div>
+        <div class="params" id="pg-params"></div>
+      </div>
+    </div>
+    <div class="playground-code" id="pg-code"></div>
+  </section>
+
+  <!-- ============================================================ how it works -->
+  <section class="section container" id="how" aria-labelledby="how-title">
+    <header class="section__head">
+      <span class="section__eyebrow" data-i18n="how.eyebrow">How it works</span>
+      <h2 id="how-title" data-i18n="how.title">Why this works where other demos don’t.</h2>
+      <p class="section__lede" data-i18n="how.lede">Most web liquid-glass demos use backdrop-filter with an SVG filter, which only Chromium renders. This library bends the element’s own pixels instead.</p>
+    </header>
+    <div class="features">
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#layers"/></svg></span>
+        <h3 data-i18n="how.f1.title">Refracts pixels, not the backdrop</h3>
+        <p data-i18n="how.f1.text">An SVG <code>feDisplacementMap</code> is applied with a plain CSS <code>filter</code>, the one form every engine renders. Glass over a photo bends an aligned copy of it.</p>
+      </div>
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#grid"/></svg></span>
+        <h3 data-i18n="how.f2.title">A lens map for every shape</h3>
+        <p data-i18n="how.f2.text">Red and green store how far each pixel bends, blue stores the rim highlight. Maps are drawn at runtime, cached, and only a quarter is computed.</p>
+      </div>
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#globe"/></svg></span>
+        <h3 data-i18n="how.f3.title">Tuned per engine</h3>
+        <p data-i18n="how.f3.text">WebKit only renders bounding-box filter units, and each engine scales displacement differently. The library measures that and compensates.</p>
+      </div>
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#zap"/></svg></span>
+        <h3 data-i18n="how.f4.title">Moves without redrawing</h3>
+        <p data-i18n="how.f4.text">Sliding a lens only shifts a filter region. The map is redrawn only when the glass changes shape, so drags hold their frame rate on phones.</p>
+      </div>
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#accessibility"/></svg></span>
+        <h3 data-i18n="how.f5.title">Real controls underneath</h3>
+        <p data-i18n="how.f5.text">Switches and sliders are native inputs with a decorative glass copy on top. Focus rings, keyboards, screen readers and reduced motion all work.</p>
+      </div>
+      <div class="feature">
+        <span class="feature__icon"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#package"/></svg></span>
+        <h3 data-i18n="how.f6.title">Zero dependencies</h3>
+        <p data-i18n="how.f6.text">Two ES modules, about 30 KB gzipped together. Works in plain HTML, React, Vue, Svelte, or anything else that renders DOM.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ support -->
+  <section class="section container" id="support" aria-labelledby="support-title">
+    <header class="section__head">
+      <span class="section__eyebrow" data-i18n="sup.eyebrow">Browser support</span>
+      <h2 id="support-title" data-i18n="sup.title">Checked in all three engines.</h2>
+      <p class="section__lede" data-i18n="sup.lede">Verified with Chrome 153, Safari 27 and Firefox 156 by rendering the same page in each engine and comparing screenshots at full resolution.</p>
+    </header>
+    <table class="matrix">
+      <thead>
+        <tr><th></th><th>Chrome · Edge</th><th>Safari · iOS</th><th>Firefox</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-i18n="sup.row1">Controls, lens, glass over images</td>
+          <td><span class="yes"><svg class="icon"><use href="assets/icons.svg#check"/></svg><span data-i18n="sup.refract">Refraction</span></span></td>
+          <td><span class="yes"><svg class="icon"><use href="assets/icons.svg#check"/></svg><span data-i18n="sup.refract">Refraction</span></span></td>
+          <td><span class="yes"><svg class="icon"><use href="assets/icons.svg#check"/></svg><span data-i18n="sup.refract">Refraction</span></span></td>
+        </tr>
+        <tr>
+          <td data-i18n="sup.row2">Glass over arbitrary page content</td>
+          <td><span class="yes"><svg class="icon"><use href="assets/icons.svg#check"/></svg><span data-i18n="sup.refract">Refraction</span></span></td>
+          <td><span class="partial"><svg class="icon"><use href="assets/icons.svg#minus"/></svg><span data-i18n="sup.blur">Frosted blur</span></span></td>
+          <td><span class="partial"><svg class="icon"><use href="assets/icons.svg#minus"/></svg><span data-i18n="sup.blur">Frosted blur</span></span></td>
+        </tr>
+        <tr>
+          <td data-i18n="sup.row3">backdrop-filter: url() demos</td>
+          <td><span class="yes"><svg class="icon"><use href="assets/icons.svg#check"/></svg><span data-i18n="sup.refract">Refraction</span></span></td>
+          <td><span class="no"><svg class="icon"><use href="assets/icons.svg#x"/></svg><span data-i18n="sup.none">Nothing</span></span></td>
+          <td><span class="no"><svg class="icon"><use href="assets/icons.svg#x"/></svg><span data-i18n="sup.none">Nothing</span></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="matrix-note" data-i18n="sup.note">The sticky navbar on this page floats over arbitrary content, so outside Chromium it falls back to a frosted blur. Everything over a known image refracts everywhere.</p>
+  </section>
+
+  <!-- ============================================================ get started -->
+  <section class="section container" id="start" aria-labelledby="start-title">
+    <header class="section__head">
+      <span class="section__eyebrow" data-i18n="start.eyebrow">Get started</span>
+      <h2 id="start-title" data-i18n="start.title">One script tag.</h2>
+      <p class="section__lede" data-i18n="start.lede">No build step and no framework. Load the module, then write the elements like any other HTML.</p>
+    </header>
+    <div class="steps">
+      <div class="step">
+        <span class="step__num">1</span>
+        <h3 data-i18n="start.s1.title">Load the components</h3>
+        <p data-i18n="start.s1.text">From liquidglass.dev, or copy the two files in <code>lib/</code> into your project.</p>
+        <script type="text/plain" data-code="html">
+<script type="module" src="https://liquidglass.dev/lib/components.js"><\/script>
+        </script>
+      </div>
+      <div class="step">
+        <span class="step__num">2</span>
+        <h3 data-i18n="start.s2.title">Write the elements</h3>
+        <p data-i18n="start.s2.text">Controls work on any surface. Set <code>--lg-surface</code> to the colour behind them.</p>
+        <script type="text/plain" data-code="html">
+<lg-switch checked>Wi-Fi</lg-switch>
+<lg-slider value="40" label="Volume"></lg-slider>
+<lg-segmented value="week">
+  <button value="day">Day</button>
+  <button value="week">Week</button>
+</lg-segmented>
+        </script>
+      </div>
+      <div class="step">
+        <span class="step__num">3</span>
+        <h3 data-i18n="start.s3.title">Put glass on a photo</h3>
+        <p data-i18n="start.s3.text">Mark the image as the backdrop. Glass inside refracts it in every browser.</p>
+        <script type="text/plain" data-code="html">
+<div class="stage" data-lg-backdrop="img">
+  <img src="photo.jpg" alt="">
+  <lg-navbar>
+    <a href="/" aria-current="page">Home</a>
+    <a href="/docs">Docs</a>
+  </lg-navbar>
+  <lg-button tone="tinted">Continue</lg-button>
+</div>
+        </script>
+      </div>
+      <div class="step">
+        <span class="step__num">4</span>
+        <h3 data-i18n="start.s4.title">Show a toast</h3>
+        <p data-i18n="start.s4.text">Toasts are a function. Pass a container to keep them inside a stage.</p>
+        <script type="text/plain" data-code="js">
+import { toast } from 'https://liquidglass.dev/lib/components.js';
+
+toast('Saved to Photos', { icon: 'check' });
+        </script>
+      </div>
+      <div class="step step--wide">
+        <span class="step__num"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#terminal"/></svg></span>
+        <h3 data-i18n="start.s5.title">Building with an AI coding agent?</h3>
+        <p data-i18n="start.s5.text">Install the liquid-glass-web skill for Claude Code or Codex. It teaches the agent the technique, the per-engine fixes, and how to verify glass in all three browsers.</p>
+        <script type="text/plain" data-code="bash">
+# installs into ~/.claude/skills and/or ~/.codex/skills
+curl -fsSL https://liquidglass.dev/install-skill.sh | sh
+        </script>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer container">
+  <div class="footer__row">
+    <a class="brand" href="./"><svg aria-hidden="true"><use href="assets/icons.svg#droplet"/></svg>liquidglass</a>
+    <nav class="footer__links" aria-label="Footer">
+      <a href="docs/" data-i18n="nav.docs">Docs</a>
+      <a href="#playground" data-i18n="nav.playground">Playground</a>
+      <a href="https://github.com/gentpan/liquidglass">GitHub</a>
+      <a href="lib/components.js">components.js</a>
+    </nav>
+  </div>
+  <p class="footer__note" data-i18n="footer.note">MIT licensed. The rendering technique was inspired by Aave Labs’ “Building Glass for the Web”; this implementation is independent. Demo wallpapers belong to their respective owners.</p>
+</footer>
+
+</body>
+</html>

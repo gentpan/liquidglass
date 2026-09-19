@@ -1,0 +1,4 @@
+interface:
+  display_name: "Liquid Glass for the Web"
+  short_description: "Cross-browser refractive liquid glass UI for the web"
+  default_prompt: "Use $liquid-glass-web to add liquid glass that refracts the same in Chrome, Safari and Firefox, then verify it with the three-engine screenshots."

@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs — Liquid Glass for the Web</title>
+<meta name="description" content="Install and use the Liquid Glass web components: switch, slider, segmented control, button, panel, navbar, menu bar, toast, dock and lens. Plus the core refraction API.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="modulepreload" href="../lib/liquid-glass.js">
+<link rel="modulepreload" href="../lib/components.js">
+<script type="module" src="../assets/site.js"></script>
+</head>
+<body>
+
+<header class="docs-header">
+  <div class="container docs-header__row">
+    <a class="brand" href="../"><svg aria-hidden="true"><use href="../assets/icons.svg#droplet"/></svg>liquidglass</a>
+    <nav class="docs-header__nav" aria-label="Site">
+      <a href="../" class="optional"><span data-l="en">Home</span><span data-l="zh">首页</span></a>
+      <a href="../#components" class="optional"><span data-l="en">Showcase</span><span data-l="zh">组件展示</span></a>
+      <a href="./" aria-current="page"><span data-l="en">Docs</span><span data-l="zh">文档</span></a>
+      <a href="https://github.com/gentpan/liquidglass">GitHub</a>
+      <lg-segmented class="lang-switch" label="Language" id="lang-switch">
+        <button value="en">EN</button>
+        <button value="zh">中文</button>
+      </lg-segmented>
+    </nav>
+  </div>
+</header>
+
+<div class="container docs">
+  <nav class="docs__nav" aria-label="Documentation">
+    <h4><span data-l="en">Getting started</span><span data-l="zh">入门</span></h4>
+    <a href="#introduction"><span data-l="en">Introduction</span><span data-l="zh">介绍</span></a>
+    <a href="#install"><span data-l="en">Installation</span><span data-l="zh">安装</span></a>
+    <a href="#frameworks"><span data-l="en">Frameworks</span><span data-l="zh">框架中使用</span></a>
+    <a href="#backdrops"><span data-l="en">Glass over images</span><span data-l="zh">照片上的玻璃</span></a>
+    <a href="#theming"><span data-l="en">Theming</span><span data-l="zh">主题</span></a>
+    <h4><span data-l="en">Components</span><span data-l="zh">组件</span></h4>
+    <a href="#switch">Switch</a>
+    <a href="#slider">Slider</a>
+    <a href="#segmented">Segmented</a>
+    <a href="#button">Button</a>
+    <a href="#panel">Panel</a>
+    <a href="#navbar">Navbar</a>
+    <a href="#menubar">Menu bar &amp; Menu</a>
+    <a href="#toast">Toast</a>
+    <a href="#dock">Dock</a>
+    <a href="#lens">Lens</a>
+    <a href="#optics"><span data-l="en">Optics attributes</span><span data-l="zh">光学属性</span></a>
+    <h4><span data-l="en">Reference</span><span data-l="zh">参考</span></h4>
+    <a href="#api"><span data-l="en">Core API</span><span data-l="zh">核心 API</span></a>
+    <a href="#webgl">WebGL</a>
+    <a href="#support"><span data-l="en">Browser support</span><span data-l="zh">浏览器支持</span></a>
+    <a href="#a11y"><span data-l="en">Accessibility</span><span data-l="zh">无障碍</span></a>
+    <a href="#skill"><span data-l="en">AI agent skill</span><span data-l="zh">AI 编程 skill</span></a>
+  </nav>
+
+  <main class="docs__main">
+    <!-- ======================================================== intro -->
+    <section id="introduction">
+      <h1><span data-l="en">Documentation</span><span data-l="zh">文档</span></h1>
+      <p class="docs__lede" data-l="en">Liquid Glass for the Web is a set of custom elements that bend light the way Apple’s Liquid Glass does, rendered live in Chrome, Safari and Firefox. It is two dependency-free ES modules: <code>liquid-glass.js</code>, the refraction engine, and <code>components.js</code>, the elements built on it.</p>
+      <p class="docs__lede" data-l="zh">Liquid Glass for the Web 是一组自定义元素，像 Apple 的 Liquid Glass 一样弯折光线，在 Chrome、Safari、Firefox 里实时渲染。它由两个零依赖的 ES 模块组成：折射引擎 <code>liquid-glass.js</code>，以及基于它的组件 <code>components.js</code>。</p>
+      <p data-l="en">Unlike demos built on <code>backdrop-filter: url()</code>, which only Chromium renders, the glass here bends the element’s own pixels with an SVG displacement map applied through a plain CSS <code>filter</code>. Glass that floats over a photo refracts an aligned copy of that photo, so it works in every engine.</p>
+      <p data-l="zh">网上很多 demo 基于 <code>backdrop-filter: url()</code>，只有 Chromium 会渲染。这里的玻璃改为通过普通 CSS <code>filter</code> 挂一张 SVG 位移贴图，弯折元素自己的像素。浮在照片上的玻璃，折射的是一份与照片对齐的副本，所以在所有引擎里都能用。</p>
+    </section>
+
+    <!-- ======================================================== install -->
+    <section id="install">
+      <h2><span data-l="en">Installation</span><span data-l="zh">安装</span></h2>
+      <p data-l="en">Load the components module once, anywhere on the page. Every <code>lg-*</code> element on the page upgrades automatically.</p>
+      <p data-l="zh">在页面任意位置引入一次组件模块，页面上所有 <code>lg-*</code> 元素会自动升级。</p>
+      <script type="text/plain" data-code="html">
+<script type="module" src="https://liquidglass.dev/lib/components.js"><\/script>
+      </script>
+      <p data-l="en">To self-host, download <a href="../lib/liquid-glass.js" download>liquid-glass.js</a> and <a href="../lib/components.js" download>components.js</a>, keep them side by side, and import <code>components.js</code>. Other sites may import the hosted files directly: they are served with CORS enabled.</p>
+      <p data-l="zh">想自己托管的话，下载 <a href="../lib/liquid-glass.js" download>liquid-glass.js</a> 和 <a href="../lib/components.js" download>components.js</a>，放在同一目录，然后引入 <code>components.js</code>。其他站点也可以直接 import 这里托管的文件，服务器已开启 CORS。</p>
+      <p data-l="en">Only need the engine? Import <code>createGlass</code> from <code>liquid-glass.js</code> and see the <a href="#api">Core API</a>.</p>
+      <p data-l="zh">只需要引擎的话，从 <code>liquid-glass.js</code> 引入 <code>createGlass</code>，见<a href="#api">核心 API</a>。</p>
+    </section>
+
+    <section id="frameworks">
+      <h2><span data-l="en">Using a framework</span><span data-l="zh">在框架中使用</span></h2>
+      <p data-l="en">The elements are plain custom elements, so they work in any framework that renders DOM. Import the module once on the client; nothing runs on the server.</p>
+      <p data-l="zh">这些都是普通的自定义元素，只要框架渲染 DOM 就能用。在客户端引入一次模块即可，服务端什么都不执行。</p>
+      <h3>React / Next.js</h3>
+      <script type="text/plain" data-code="js" data-title="Glass.jsx">
+'use client';
+import { useEffect } from 'react';
+
+export default function Settings() {
+  useEffect(() => { import('https://liquidglass.dev/lib/components.js'); }, []);
+  return (
+    <lg-switch checked onChange={(e) => console.log(e.target.checked)}>Wi-Fi</lg-switch>
+  );
+}
+      </script>
+      <h3>Vue</h3>
+      <script type="text/plain" data-code="js" data-title="main.js">
+// Tell Vue that lg-* tags are custom elements
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('lg-');
+import('https://liquidglass.dev/lib/components.js');
+      </script>
+    </section>
+
+    <!-- ======================================================== backdrops -->
+    <section id="backdrops">
+      <h2><span data-l="en">Glass over images</span><span data-l="zh">照片上的玻璃</span></h2>
+      <p data-l="en">Buttons, panels, navbars, menus, toasts and the dock refract what is behind them. Tell them what that is with <code>data-lg-backdrop</code> on a container: an empty value means the container’s own CSS background, a selector points at an image inside it.</p>
+      <p data-l="zh">按钮、面板、导航栏、菜单、Toast 和 Dock 会折射它们身后的内容。用容器上的 <code>data-lg-backdrop</code> 告诉它们身后是什么：值为空表示容器自己的 CSS 背景，值为选择器则指向容器里的一张图片。</p>
+      <script type="text/plain" data-code="html">
+<div class="hero" data-lg-backdrop="img">
+  <img src="photo.jpg" alt="">
+  <lg-panel radius="24">Refracts photo.jpg in every browser</lg-panel>
+</div>
+
+<!-- or point one element at any image -->
+<lg-button backdrop="#wallpaper">Continue</lg-button>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th><span data-l="en">Backdrop</span><span data-l="zh">背景</span></th><th>Chrome · Edge</th><th>Safari · Firefox</th></tr></thead>
+        <tbody>
+          <tr><td><span data-l="en">Image or CSS background (marked)</span><span data-l="zh">已标记的图片或 CSS 背景</span></td><td><span data-l="en">Refraction</span><span data-l="zh">真实折射</span></td><td><span data-l="en">Refraction</span><span data-l="zh">真实折射</span></td></tr>
+          <tr><td><span data-l="en">Anything else (arbitrary DOM)</span><span data-l="zh">其他任意 DOM</span></td><td><span data-l="en">Refraction via <code>backdrop-filter</code></span><span data-l="zh">通过 <code>backdrop-filter</code> 真实折射</span></td><td><span data-l="en">Frosted blur (<code>--lg-fallback</code>)</span><span data-l="zh">磨砂模糊（<code>--lg-fallback</code>）</span></td></tr>
+        </tbody>
+      </table></div>
+      <p data-l="en">The copy follows scroll and resize. Glass that moves with a CSS <code>transform: translate()</code> stays aligned; avoid scaling glass with <code>transform: scale()</code>.</p>
+      <p data-l="zh">副本会跟随滚动和缩放窗口自动对齐。用 CSS <code>transform: translate()</code> 移动玻璃不会错位；不要用 <code>transform: scale()</code> 缩放玻璃。</p>
+    </section>
+
+    <!-- ======================================================== theming -->
+    <section id="theming">
+      <h2><span data-l="en">Theming</span><span data-l="zh">主题</span></h2>
+      <p data-l="en">Every element reads these custom properties. Set them on <code>:root</code> or on any container.</p>
+      <p data-l="zh">所有元素都读取下面这些自定义属性，可以设在 <code>:root</code> 或任意容器上。</p>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th><span data-l="en">Property</span><span data-l="zh">属性</span></th><th><span data-l="en">Default</span><span data-l="zh">默认</span></th><th><span data-l="en">Used for</span><span data-l="zh">用途</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>--lg-accent</code></td><td>#0a84ff</td><td><span data-l="en">Slider fill, selected labels, menu highlight</span><span data-l="zh">滑块填充、选中项文字、菜单高亮</span></td></tr>
+          <tr><td><code>--lg-on</code></td><td>#34c759</td><td><span data-l="en">Switch track when on</span><span data-l="zh">开关打开时的轨道</span></td></tr>
+          <tr><td><code>--lg-surface</code></td><td>#ffffff</td><td><span data-l="en">Colour behind a control; set <code>transparent</code> on glass or photos</span><span data-l="zh">控件身后的颜色；放在玻璃或照片上时设为 <code>transparent</code></span></td></tr>
+          <tr><td><code>--lg-track</code>, <code>--lg-track-off</code></td><td>#e5e7eb, #d1d5db</td><td><span data-l="en">Slider and segmented track, switch off state</span><span data-l="zh">滑块与分段控件的轨道、开关关闭状态</span></td></tr>
+          <tr><td><code>--lg-tint</code></td><td>rgb(255 255 255 / .14)</td><td><span data-l="en">Colour laid over glass (dark tints keep white text legible)</span><span data-l="zh">覆在玻璃上的色调（深色调能让白字保持清晰）</span></td></tr>
+          <tr><td><code>--lg-tint-strong</code></td><td>rgb(255 255 255 / .5)</td><td><span data-l="en">Tint for <code>tone="light"</code></span><span data-l="zh"><code>tone="light"</code> 时的色调</span></td></tr>
+          <tr><td><code>--lg-indicator</code></td><td>rgb(255 255 255 / .6)</td><td><span data-l="en">Navbar selection pill</span><span data-l="zh">导航栏选中项的胶囊</span></td></tr>
+          <tr><td><code>--lg-text</code>, <code>--lg-on-glass</code></td><td>#111827, #ffffff</td><td><span data-l="en">Text on light and on dark glass</span><span data-l="zh">浅色玻璃和深色玻璃上的文字</span></td></tr>
+          <tr><td><code>--lg-shadow-1</code>, <code>--lg-shadow-2</code></td><td>—</td><td><span data-l="en">Thumb and glass shadows</span><span data-l="zh">拇指和玻璃的阴影</span></td></tr>
+          <tr><td><code>--lg-fallback</code></td><td>blur(16px) saturate(1.6)</td><td><span data-l="en">backdrop-filter where refraction is impossible</span><span data-l="zh">无法折射时使用的 backdrop-filter</span></td></tr>
+          <tr><td><code>--lg-toast-top</code></td><td>16px</td><td><span data-l="en">Distance of toasts from the top</span><span data-l="zh">Toast 距离顶部的距离</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== switch -->
+    <section id="switch">
+      <h2><span data-l="en">Switch</span><span data-l="zh">开关</span> <code>&lt;lg-switch&gt;</code></h2>
+      <p data-l="en">A native checkbox with a glass thumb. At rest the thumb is solid white; press and hold and it turns into glass that bends the track underneath.</p>
+      <p data-l="zh">一个原生复选框加上玻璃拇指。静止时拇指是实心白色，按住后会变成玻璃，弯折下面的轨道。</p>
+      <div class="demo">
+        <div class="setting-list">
+          <lg-switch checked>Wi-Fi</lg-switch>
+          <lg-switch>Bluetooth</lg-switch>
+          <lg-switch checked disabled>AirDrop</lg-switch>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-switch checked name="wifi">Wi-Fi</lg-switch>
+<lg-switch aria-label="Dark mode"></lg-switch>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>checked</code></td><td><span data-l="en">Attribute and property. On or off.</span><span data-l="zh">属性和特性，开或关。</span></td></tr>
+          <tr><td><code>disabled</code></td><td><span data-l="en">Attribute. Disables the input.</span><span data-l="zh">禁用输入。</span></td></tr>
+          <tr><td><code>name</code>, <code>value</code></td><td><span data-l="en">Passed to the checkbox, so the switch submits with forms.</span><span data-l="zh">传给内部复选框，开关可以随表单提交。</span></td></tr>
+          <tr><td><code>aria-label</code></td><td><span data-l="en">Label when the element has no text content.</span><span data-l="zh">元素没有文字内容时使用的标签。</span></td></tr>
+          <tr><td><code>change</code></td><td><span data-l="en">Event from the native checkbox; bubbles.</span><span data-l="zh">来自原生复选框的事件，会冒泡。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== slider -->
+    <section id="slider">
+      <h2><span data-l="en">Slider</span><span data-l="zh">滑块</span> <code>&lt;lg-slider&gt;</code></h2>
+      <p data-l="en">A native range input. The glass thumb bends the fill only gently, so the value under it stays readable.</p>
+      <p data-l="zh">一个原生 range 输入。玻璃拇指只轻微弯折填充条，下面的数值始终读得清。</p>
+      <div class="demo">
+        <lg-slider value="40" label="Volume"></lg-slider>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-slider min="0" max="100" step="1" value="40" label="Volume"></lg-slider>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>min</code>, <code>max</code>, <code>step</code>, <code>name</code></td><td><span data-l="en">Passed to the range input.</span><span data-l="zh">传给内部的 range 输入。</span></td></tr>
+          <tr><td><code>value</code></td><td><span data-l="en">Attribute and property (number).</span><span data-l="zh">属性和特性（数字）。</span></td></tr>
+          <tr><td><code>label</code></td><td><span data-l="en">Accessible name.</span><span data-l="zh">无障碍名称。</span></td></tr>
+          <tr><td><code>input</code>, <code>change</code></td><td><span data-l="en">Events from the native input; bubble.</span><span data-l="zh">来自原生输入的事件，会冒泡。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== segmented -->
+    <section id="segmented">
+      <h2><span data-l="en">Segmented control</span><span data-l="zh">分段控件</span> <code>&lt;lg-segmented&gt;</code></h2>
+      <p data-l="en">A radio group whose selection indicator is a glass lens. It springs between options and stretches with its speed. Arrow keys move the selection.</p>
+      <p data-l="zh">一个单选组，选中指示器是一块玻璃透镜，在选项之间弹簧移动，速度越快拉得越长。方向键可以切换选项。</p>
+      <div class="demo">
+        <lg-segmented value="week" label="Range">
+          <button value="day">Day</button>
+          <button value="week">Week</button>
+          <button value="month">Month</button>
+          <button value="year">Year</button>
+        </lg-segmented>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-segmented value="week" label="Range">
+  <button value="day">Day</button>
+  <button value="week">Week</button>
+  <button value="month">Month</button>
+</lg-segmented>
+
+<script type="module">
+  document.querySelector('lg-segmented')
+    .addEventListener('change', (e) => console.log(e.detail.value));
+<\/script>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>value</code></td><td><span data-l="en">Attribute (initial) and property: the selected button’s <code>value</code>, or its text.</span><span data-l="zh">属性（初始值）和特性：选中按钮的 <code>value</code>，没有则取文字。</span></td></tr>
+          <tr><td><code>label</code></td><td><span data-l="en">Accessible name of the group.</span><span data-l="zh">选项组的无障碍名称。</span></td></tr>
+          <tr><td><code>change</code></td><td><span data-l="en">Event with <code>detail.value</code> and <code>detail.index</code>.</span><span data-l="zh">事件，带 <code>detail.value</code> 和 <code>detail.index</code>。</span></td></tr>
+          <tr><td><code>refresh()</code></td><td><span data-l="en">Call after changing option labels.</span><span data-l="zh">修改选项文字后调用。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== button -->
+    <section id="button">
+      <h2><span data-l="en">Button</span><span data-l="zh">按钮</span> <code>&lt;lg-button&gt;</code></h2>
+      <p data-l="en">A glass capsule over a backdrop. It squishes when pressed. With <code>href</code> it renders a link.</p>
+      <p data-l="zh">浮在背景上的玻璃胶囊，按下时会被挤压。设置 <code>href</code> 时渲染成链接。</p>
+      <div class="demo demo--photo stage--dark" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/beach-1200.jpg" alt="" loading="lazy">
+        <div class="demo__center">
+          <lg-button tone="tinted">Continue</lg-button>
+          <lg-button>Not now</lg-button>
+          <lg-button tone="light">Details</lg-button>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<div data-lg-backdrop="img">
+  <img src="photo.jpg" alt="">
+  <lg-button tone="tinted">Continue</lg-button>
+  <lg-button>Not now</lg-button>
+  <lg-button tone="light" href="/details">Details</lg-button>
+</div>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>tone</code></td><td><span data-l="en"><code>clear</code> (default), <code>tinted</code> (accent colour) or <code>light</code> (white glass, dark text).</span><span data-l="zh"><code>clear</code>（默认）、<code>tinted</code>（强调色）或 <code>light</code>（白色玻璃、深色文字）。</span></td></tr>
+          <tr><td><code>href</code>, <code>target</code></td><td><span data-l="en">Render a link instead of a button.</span><span data-l="zh">渲染成链接而不是按钮。</span></td></tr>
+          <tr><td><code>type</code>, <code>disabled</code></td><td><span data-l="en">Passed to the button.</span><span data-l="zh">传给内部按钮。</span></td></tr>
+          <tr><td><code>radius</code>, <code>backdrop</code></td><td><span data-l="en">Corner radius (default capsule) and backdrop selector.</span><span data-l="zh">圆角（默认胶囊形）和背景选择器。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== panel -->
+    <section id="panel">
+      <h2><span data-l="en">Panel</span><span data-l="zh">面板</span> <code>&lt;lg-panel&gt;</code></h2>
+      <p data-l="en">A frosted glass card. Put anything inside; controls placed in it should use <code>--lg-surface: transparent</code>.</p>
+      <p data-l="zh">磨砂玻璃卡片，里面可以放任何内容；放在面板里的控件要设 <code>--lg-surface: transparent</code>。</p>
+      <div class="demo demo--photo stage--dark" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/city-1200.jpg" alt="" loading="lazy">
+        <div class="demo__center">
+          <lg-panel radius="24" class="demo-weather">
+            <b>Shanghai</b><span>Cloudy · 24°</span>
+          </lg-panel>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-panel radius="24" blur="3">
+  <b>Shanghai</b>
+  <span>Cloudy · 24°</span>
+</lg-panel>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>tone</code></td><td><span data-l="en"><code>light</code> for white glass with dark text.</span><span data-l="zh"><code>light</code> 为白色玻璃、深色文字。</span></td></tr>
+          <tr><td><code>radius</code>, <code>backdrop</code></td><td><span data-l="en">Corner radius (default 24) and backdrop selector.</span><span data-l="zh">圆角（默认 24）和背景选择器。</span></td></tr>
+          <tr><td><a href="#optics"><span data-l="en">Optics</span><span data-l="zh">光学属性</span></a></td><td><span data-l="en">Default blur is 2 for legibility; set <code>blur="0"</code> for clear glass.</span><span data-l="zh">默认 blur 为 2 以保证可读性；设 <code>blur="0"</code> 得到清透玻璃。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== navbar -->
+    <section id="navbar">
+      <h2><span data-l="en">Navbar</span><span data-l="zh">导航栏</span> <code>&lt;lg-navbar&gt;</code></h2>
+      <p data-l="en">A glass capsule of links or buttons with a glass indicator that follows the pointer and settles on the current item (<code>aria-current="page"</code>).</p>
+      <p data-l="zh">由链接或按钮组成的玻璃胶囊，玻璃指示器跟随指针，并停在当前项（<code>aria-current="page"</code>）上。</p>
+      <div class="demo demo--photo stage--dark" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/game-1200.jpg" alt="" loading="lazy">
+        <div class="demo__center">
+          <lg-navbar aria-label="Demo">
+            <button aria-current="page">Overview</button>
+            <button>Specs</button>
+            <button>Compare</button>
+            <button>Buy</button>
+          </lg-navbar>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-navbar>
+  <a href="/" aria-current="page">Overview</a>
+  <a href="/specs">Specs</a>
+  <a href="/buy">Buy</a>
+</lg-navbar>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>tone</code></td><td><span data-l="en"><code>light</code> for white glass with dark text.</span><span data-l="zh"><code>light</code> 为白色玻璃、深色文字。</span></td></tr>
+          <tr><td><code>setCurrent(i)</code></td><td><span data-l="en">Mark item <code>i</code> as current and move the indicator.</span><span data-l="zh">把第 <code>i</code> 项设为当前项并移动指示器。</span></td></tr>
+          <tr><td><code>refresh()</code></td><td><span data-l="en">Call after changing item text.</span><span data-l="zh">修改项目文字后调用。</span></td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#sparkles"/></svg><p data-l="en">A navbar fixed over scrolling page content has no known backdrop. It refracts in Chromium and falls back to <code>--lg-fallback</code> in Safari and Firefox, like the sticky bar on the home page.</p><p data-l="zh">固定在滚动内容上方的导航栏没有已知背景：在 Chromium 里真实折射，在 Safari 和 Firefox 里退化为 <code>--lg-fallback</code>，首页顶部吸附的导航栏就是这样。</p></div>
+    </section>
+
+    <!-- ======================================================== menubar -->
+    <section id="menubar">
+      <h2><span data-l="en">Menu bar &amp; Menu</span><span data-l="zh">菜单栏与菜单</span> <code>&lt;lg-menubar&gt;</code> <code>&lt;lg-menu&gt;</code></h2>
+      <p data-l="en">A floating glass bar whose menus open as frosted glass panels with a glass highlight that slides between items. Arrow keys, Enter and Escape work as in a desktop menu bar.</p>
+      <p data-l="zh">悬浮的玻璃菜单栏，菜单展开为磨砂玻璃面板，高亮本身是一块在菜单项之间滑动的玻璃。方向键、回车、Esc 的行为和桌面菜单栏一致。</p>
+      <div class="demo demo--photo demo--menubar" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/city-1200.jpg" alt="" loading="lazy">
+        <div class="demo__bar">
+          <lg-menubar>
+            <b class="demo__brand">Glass</b>
+            <lg-menu label="File"><button data-shortcut="⌘N">New Window</button><button data-shortcut="⌘O">Open…</button><hr><button data-shortcut="⌘W">Close</button></lg-menu>
+            <lg-menu label="Edit"><button data-shortcut="⌘Z">Undo</button><hr><button data-shortcut="⌘C">Copy</button><button data-shortcut="⌘V">Paste</button></lg-menu>
+            <lg-menu label="View"><button>Show Sidebar</button><button>Enter Full Screen</button></lg-menu>
+          </lg-menubar>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-menubar>
+  <b>Glass</b>
+  <lg-menu label="File">
+    <button data-shortcut="⌘N" value="new">New Window</button>
+    <button data-shortcut="⌘O">Open…</button>
+    <hr>
+    <button data-shortcut="⌘W">Close</button>
+  </lg-menu>
+  <lg-menu label="Edit">…</lg-menu>
+</lg-menubar>
+
+<script type="module">
+  document.querySelector('lg-menubar')
+    .addEventListener('select', (e) => console.log(e.detail.value));
+<\/script>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>label</code></td><td><span data-l="en">On <code>lg-menu</code>: the trigger text.</span><span data-l="zh">用在 <code>lg-menu</code> 上：触发按钮的文字。</span></td></tr>
+          <tr><td><code>data-shortcut</code></td><td><span data-l="en">On a menu item: shortcut hint shown on the right.</span><span data-l="zh">用在菜单项上：右侧显示的快捷键提示。</span></td></tr>
+          <tr><td><code>select</code></td><td><span data-l="en">Event on <code>lg-menu</code> (bubbles) with <code>detail.item</code> and <code>detail.value</code>.</span><span data-l="zh"><code>lg-menu</code> 上的事件（会冒泡），带 <code>detail.item</code> 和 <code>detail.value</code>。</span></td></tr>
+          <tr><td><code>show()</code>, <code>close()</code></td><td><span data-l="en">Open or close a menu from script.</span><span data-l="zh">用脚本打开或关闭菜单。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== toast -->
+    <section id="toast">
+      <h2><span data-l="en">Toast</span> <code>toast()</code></h2>
+      <p data-l="en">Toasts drop in from the top on a spring, stretch as they land and leave on their own. They are announced to screen readers through a polite live region.</p>
+      <p data-l="zh">Toast 带着弹簧从顶部落下，落地时被拉伸，到时间自动离开；会通过礼貌型的 live region 播报给读屏软件。</p>
+      <div class="demo demo--photo stage--dark" id="toast-demo" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/portrait-1200.jpg" alt="" loading="lazy">
+        <div class="demo__center demo__center--bottom">
+          <lg-button id="toast-demo-button"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#bell"/></svg>Show a toast</lg-button>
+        </div>
+      </div>
+      <script type="text/plain" data-code="js">
+import { toast } from 'https://liquidglass.dev/lib/components.js';
+
+toast('Saved to Photos', { icon: 'check' });
+
+// inside a stage whose image is the backdrop
+toast('New message', { icon: 'bell', container: document.querySelector('.stage') });
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th><span data-l="en">Option</span><span data-l="zh">选项</span></th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>icon</code></td><td><span data-l="en"><code>check</code>, <code>info</code>, <code>alert</code>, <code>bell</code>, your own SVG markup, or <code>null</code>.</span><span data-l="zh"><code>check</code>、<code>info</code>、<code>alert</code>、<code>bell</code>、自定义 SVG，或 <code>null</code>。</span></td></tr>
+          <tr><td><code>duration</code></td><td><span data-l="en">Milliseconds before it leaves (default 2600, 0 keeps it). Clicking dismisses.</span><span data-l="zh">多少毫秒后离开（默认 2600，0 表示不自动离开）。点击可关闭。</span></td></tr>
+          <tr><td><code>container</code></td><td><span data-l="en">Element to show it in (default <code>document.body</code>, fixed to the viewport).</span><span data-l="zh">显示在哪个元素里（默认 <code>document.body</code>，固定在视口）。</span></td></tr>
+          <tr><td><code>tone</code>, <code>backdrop</code></td><td><span data-l="en">As on buttons.</span><span data-l="zh">与按钮相同。</span></td></tr>
+          <tr><td><span data-l="en">returns</span><span data-l="zh">返回值</span></td><td><code>{ close(), element }</code></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== dock -->
+    <section id="dock">
+      <h2>Dock <code>&lt;lg-dock&gt;</code></h2>
+      <p data-l="en">A glass shelf for icon buttons. A magnifying lens follows the pointer (or keyboard focus) across the icons.</p>
+      <p data-l="zh">放图标按钮的玻璃托盘，一块放大透镜跟随指针（或键盘焦点）在图标上移动。</p>
+      <div class="demo demo--photo" data-lg-backdrop=".demo__img">
+        <img class="demo__img" src="../images/anime-1200.jpg" alt="" loading="lazy">
+        <div class="demo__center demo__center--bottom">
+          <lg-dock aria-label="Dock">
+            <button class="app-icon app-icon--mail" aria-label="Mail"><svg><use href="../assets/icons.svg#mail"/></svg></button>
+            <button class="app-icon app-icon--music" aria-label="Music"><svg><use href="../assets/icons.svg#music"/></svg></button>
+            <button class="app-icon app-icon--photos" aria-label="Photos"><svg><use href="../assets/icons.svg#image"/></svg></button>
+            <button class="app-icon app-icon--maps" aria-label="Maps"><svg><use href="../assets/icons.svg#map"/></svg></button>
+            <button class="app-icon app-icon--settings" aria-label="Settings"><svg><use href="../assets/icons.svg#settings"/></svg></button>
+          </lg-dock>
+        </div>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-dock aria-label="Apps">
+  <button aria-label="Mail"><img src="mail.png" alt=""></button>
+  <button aria-label="Music"><img src="music.png" alt=""></button>
+</lg-dock>
+      </script>
+    </section>
+
+    <!-- ======================================================== lens -->
+    <section id="lens">
+      <h2><span data-l="en">Lens</span><span data-l="zh">透镜</span> <code>&lt;lg-lens&gt;</code></h2>
+      <p data-l="en">Wraps any content and refracts it through a lens that follows the pointer. Outside the lens the content is the original DOM: text stays selectable and links stay clickable. Give the content an opaque background.</p>
+      <p data-l="zh">包住任意内容，用跟随指针的透镜去折射它。透镜以外是原始 DOM：文字可选中、链接可点击。内容要有不透明的背景。</p>
+      <div class="demo demo--photo demo--lens">
+        <lg-lens width="200" height="130" radius="65" x="60" y="45">
+          <img src="../images/wave-1200.jpg" alt="" loading="lazy">
+        </lg-lens>
+      </div>
+      <script type="text/plain" data-code="html">
+<lg-lens width="200" height="130" radius="65" refraction="30" x="60" y="45">
+  <img src="photo.jpg" alt="">
+</lg-lens>
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th>API</th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>width</code>, <code>height</code>, <code>size</code></td><td><span data-l="en">Lens size in px (default 160).</span><span data-l="zh">透镜尺寸，单位 px（默认 160）。</span></td></tr>
+          <tr><td><code>radius</code></td><td><span data-l="en">Corner radius (default: half the shorter side).</span><span data-l="zh">圆角（默认短边的一半）。</span></td></tr>
+          <tr><td><code>x</code>, <code>y</code></td><td><span data-l="en">Resting position in % of the element (default 50).</span><span data-l="zh">静止位置，占元素的百分比（默认 50）。</span></td></tr>
+          <tr><td><code>configure(options)</code></td><td><span data-l="en">Change size and optics at runtime.</span><span data-l="zh">运行时修改尺寸和光学参数。</span></td></tr>
+          <tr><td><code>moveTo(x, y)</code></td><td><span data-l="en">Move the lens from script (px).</span><span data-l="zh">用脚本移动透镜（px）。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== optics -->
+    <section id="optics">
+      <h2><span data-l="en">Optics attributes</span><span data-l="zh">光学属性</span></h2>
+      <p data-l="en">Every glass element accepts these attributes to override its defaults. Try them live in the <a href="../#playground">playground</a>.</p>
+      <p data-l="zh">所有玻璃元素都可以用下面这些属性覆盖默认值，可以在<a href="../#playground">调参区</a>里实时试。</p>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th><span data-l="en">Attribute</span><span data-l="zh">属性</span></th><th><span data-l="en">Range</span><span data-l="zh">范围</span></th><th><span data-l="en">Effect</span><span data-l="zh">作用</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>refraction</code></td><td>0–60</td><td><span data-l="en">How far the rim bends content, in px.</span><span data-l="zh">边缘弯折的距离，单位 px。</span></td></tr>
+          <tr><td><code>bezel</code></td><td>0.1–1</td><td><span data-l="en">Width of the curved rim as a share of the half size; 1 is a full dome.</span><span data-l="zh">弯折带宽度占半个短边的比例；1 为整块穹顶。</span></td></tr>
+          <tr><td><code>curvature</code></td><td>2–6</td><td><span data-l="en">Rim profile: 2 is round, higher is a flatter top with a sharper edge.</span><span data-l="zh">边缘轮廓：2 为圆弧，数值越大顶部越平、边缘越陡。</span></td></tr>
+          <tr><td><code>ior</code></td><td>1.3–2</td><td><span data-l="en">Index of refraction; shapes how fast the bend fades inward.</span><span data-l="zh">折射率，决定弯折向内衰减的快慢。</span></td></tr>
+          <tr><td><code>chroma</code></td><td>0–0.3</td><td><span data-l="en">Colour fringe at the rim.</span><span data-l="zh">边缘的色散彩边。</span></td></tr>
+          <tr><td><code>blur</code></td><td>0–8</td><td><span data-l="en">Frost, in px.</span><span data-l="zh">磨砂程度，单位 px。</span></td></tr>
+          <tr><td><code>specular</code>, <code>specular-width</code></td><td>0–1, 1–4</td><td><span data-l="en">Rim highlight strength and width.</span><span data-l="zh">边缘高光的强度和宽度。</span></td></tr>
+          <tr><td><code>light-angle</code></td><td>-180–180</td><td><span data-l="en">Light direction in degrees; -90 is from the top.</span><span data-l="zh">光照方向（度），-90 为从上方照射。</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ======================================================== api -->
+    <section id="api">
+      <h2><span data-l="en">Core API</span><span data-l="zh">核心 API</span></h2>
+      <p data-l="en"><code>createGlass(element, options)</code> puts a lens on any element and bends that element’s own pixels. Moving the lens is cheap; the displacement map is regenerated only when its shape or optics change.</p>
+      <p data-l="zh"><code>createGlass(element, options)</code> 可以给任意元素加一块透镜，弯折这个元素自己的像素。移动透镜开销很小，只有形状或光学参数变化时才重新生成位移贴图。</p>
+      <script type="text/plain" data-code="js">
+import { createGlass, createSpring } from 'https://liquidglass.dev/lib/liquid-glass.js';
+
+const glass = createGlass(card, { x: 40, y: 40, width: 180, height: 120, radius: 60, refraction: 28 });
+glass.update({ x: 120 });           // move (cheap)
+glass.update({ width: 200 });       // reshape (new map, cached)
+glass.update({ hidden: true });     // remove the lens without destroying it
+glass.destroy();
+
+// springs for press and drag animations; honours prefers-reduced-motion
+const press = createSpring(0, (value, velocity) => glass.update({ width: 180 + 20 * value }));
+press.set(1);
+      </script>
+      <div class="props-wrap"><table class="props">
+        <thead><tr><th><span data-l="en">Option</span><span data-l="zh">选项</span></th><th><span data-l="en">Description</span><span data-l="zh">说明</span></th></tr></thead>
+        <tbody>
+          <tr><td><code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>, <code>radius</code></td><td><span data-l="en">Lens rectangle in CSS px, relative to the element’s border box.</span><span data-l="zh">透镜矩形，CSS px，相对元素的 border box。</span></td></tr>
+          <tr><td><span data-l="en">optics</span><span data-l="zh">光学参数</span></td><td><code>refraction</code>, <code>bezel</code>, <code>curvature</code>, <code>ior</code>, <code>chroma</code>, <code>blur</code>, <code>specular</code>, <code>specularWidth</code>, <code>lightAngle</code>, <code>invert</code>, <code>mapScale</code></td></tr>
+          <tr><td><code>fit</code></td><td><span data-l="en">The lens follows the element’s own size.</span><span data-l="zh">透镜跟随元素自身尺寸。</span></td></tr>
+          <tr><td><code>clip</code></td><td><span data-l="en">Clip the element to the lens shape (for decorative copies on top of real controls).</span><span data-l="zh">把元素裁成透镜形状（用于盖在真实控件上的装饰副本）。</span></td></tr>
+          <tr><td><code>mode: 'backdrop'</code></td><td><span data-l="en">Bend what is behind the element; Chromium only, others get <code>fallback</code>.</span><span data-l="zh">弯折元素身后的内容；仅 Chromium，其他浏览器使用 <code>fallback</code>。</span></td></tr>
+          <tr><td><code>hidden</code></td><td><span data-l="en">No lens; toggle with <code>update({ hidden })</code>.</span><span data-l="zh">不显示透镜；用 <code>update({ hidden })</code> 切换。</span></td></tr>
+        </tbody>
+      </table></div>
+      <p data-l="en"><code>renderLensMap(options, scale)</code> returns the displacement map as a canvas, the same one both renderers use. <code>engine</code> reports <code>blink</code>, <code>webkit</code> or <code>gecko</code>.</p>
+      <p data-l="zh"><code>renderLensMap(options, scale)</code> 以 canvas 形式返回位移贴图，两个渲染器用的是同一张。<code>engine</code> 返回 <code>blink</code>、<code>webkit</code> 或 <code>gecko</code>。</p>
+    </section>
+
+    <section id="webgl">
+      <h2>WebGL <code>glass-webgl.js</code></h2>
+      <p data-l="en">Safari never hands a playing <code>&lt;video&gt;</code> to SVG filters, and canvas content has no DOM to filter. For those, <a href="../lib/glass-webgl.js">glass-webgl.js</a> draws the same lenses in WebGL from the same maps.</p>
+      <p data-l="zh">Safari 不会把播放中的 <code>&lt;video&gt;</code> 交给 SVG 滤镜，canvas 里的内容也没有 DOM 可以处理。这两种情况用 <a href="../lib/glass-webgl.js">glass-webgl.js</a>，它用同一张贴图在 WebGL 里画出同样的透镜。</p>
+      <script type="text/plain" data-code="js">
+import { createGlassRenderer } from 'https://liquidglass.dev/lib/glass-webgl.js';
+
+const renderer = createGlassRenderer(canvasOverVideo, video);
+renderer.setLenses([{ x: 24, y: 200, width: 56, height: 56, radius: 28, refraction: 14 }]);
+renderer.start();
+      </script>
+    </section>
+
+    <!-- ======================================================== support -->
+    <section id="support">
+      <h2><span data-l="en">Browser support</span><span data-l="zh">浏览器支持</span></h2>
+      <ul>
+        <li data-l="en">Chrome, Edge and other Chromium browsers, Safari on macOS and iOS (every iOS browser is WebKit), and Firefox: controls, lenses and glass over a marked backdrop refract identically.</li>
+        <li data-l="zh">Chrome、Edge 等 Chromium 浏览器，macOS 和 iOS 上的 Safari（iOS 上所有浏览器都是 WebKit），以及 Firefox：控件、透镜和已标记背景上的玻璃，折射效果完全一致。</li>
+        <li data-l="en">Glass over arbitrary DOM refracts in Chromium only and falls back to a frosted blur elsewhere.</li>
+        <li data-l="zh">浮在任意 DOM 上的玻璃只在 Chromium 里真实折射，其他浏览器退化为磨砂模糊。</li>
+        <li data-l="en">Keep filtered areas reasonably small. WebKit caps the size of a filter’s input, and very large glass can break into tiles.</li>
+        <li data-l="zh">被滤镜处理的区域不要太大：WebKit 对滤镜输入尺寸有上限，特别大的玻璃可能碎成块。</li>
+      </ul>
+    </section>
+
+    <section id="a11y">
+      <h2><span data-l="en">Accessibility</span><span data-l="zh">无障碍</span></h2>
+      <ul>
+        <li data-l="en">Switches, sliders and segmented controls are native inputs and radios; the glass on top is an <code>aria-hidden</code> copy with <code>pointer-events: none</code>.</li>
+        <li data-l="zh">开关、滑块、分段控件都是原生 input 和单选按钮；上面的玻璃是 <code>aria-hidden</code> 的副本，并设了 <code>pointer-events: none</code>。</li>
+        <li data-l="en">Focus rings are drawn on the visible thumb; menus and segmented controls follow the expected keyboard patterns.</li>
+        <li data-l="zh">焦点环画在可见的拇指上；菜单和分段控件遵循常规的键盘操作方式。</li>
+        <li data-l="en"><code>prefers-reduced-motion</code> turns springs into instant changes, and <code>prefers-reduced-transparency</code> switches glass to an opaque tint.</li>
+        <li data-l="zh"><code>prefers-reduced-motion</code> 会让弹簧动画直接跳到终点，<code>prefers-reduced-transparency</code> 会把玻璃换成不透明色调。</li>
+        <li data-l="en">Check text contrast on your own images; use a darker <code>--lg-tint</code> behind white text on bright photos.</li>
+        <li data-l="zh">请按你自己的图片检查文字对比度；在明亮照片上放白字时，把 <code>--lg-tint</code> 调深一些。</li>
+      </ul>
+    </section>
+
+    <!-- ======================================================== skill -->
+    <section id="skill">
+      <h2><span data-l="en">AI agent skill</span><span data-l="zh">AI 编程 skill</span></h2>
+      <p data-l="en">The repository ships <code>liquid-glass-web</code>, a skill for Claude Code and Codex. It teaches the agent this technique, the per-engine fixes that make it work in Safari and Firefox, the component patterns, and a script that screenshots a page in Chrome, WebKit and Firefox so the agent can check its own work.</p>
+      <p data-l="zh">仓库里附带 <code>liquid-glass-web</code> 这个 skill，可用于 Claude Code 和 Codex。它会教 AI：这套技术、让效果在 Safari 和 Firefox 里也成立的各引擎修正、各种组件写法，以及一个在 Chrome、WebKit、Firefox 里分别截图的脚本，让 AI 能自己检查做出来的效果。</p>
+      <script type="text/plain" data-code="bash">
+# one line: installs into ~/.claude/skills and/or ~/.codex/skills
+curl -fsSL https://liquidglass.dev/install-skill.sh | sh
+
+# or by hand
+git clone https://github.com/gentpan/liquidglass.git
+cp -r liquidglass/skill/liquid-glass-web ~/.claude/skills/   # Claude Code
+cp -r liquidglass/skill/liquid-glass-web ~/.codex/skills/    # Codex
+      </script>
+      <p data-l="en">Then just ask for it, for example: “add a liquid glass navbar over the hero image”. The agent loads the skill when a request calls for web glass or refraction.</p>
+      <p data-l="zh">之后直接提需求就行，例如“在首屏大图上加一个液态玻璃导航栏”。遇到网页玻璃或折射相关的请求，AI 会自动加载这个 skill。</p>
+    </section>
+
+    <section id="credits">
+      <h2><span data-l="en">Credits &amp; license</span><span data-l="zh">致谢与许可</span></h2>
+      <p data-l="en">MIT licensed. The approach of refracting live DOM with a displacement map, rather than using backdrop-filter, was described by Aave Labs in <a href="https://aave.com/design/building-glass-for-the-web">Building Glass for the Web</a>; this library is an independent implementation. Icons are from <a href="https://lucide.dev">Lucide</a>.</p>
+      <p data-l="zh">MIT 许可。用位移贴图折射实时 DOM、而不是用 backdrop-filter 的思路，出自 Aave Labs 的文章 <a href="https://aave.com/design/building-glass-for-the-web">Building Glass for the Web</a>；本库为独立实现。图标来自 <a href="https://lucide.dev">Lucide</a>。</p>
+    </section>
+  </main>
+</div>
+
+<footer class="footer container">
+  <div class="footer__row">
+    <a class="brand" href="../"><svg aria-hidden="true"><use href="../assets/icons.svg#droplet"/></svg>liquidglass</a>
+    <nav class="footer__links" aria-label="Footer">
+      <a href="../"><span data-l="en">Home</span><span data-l="zh">首页</span></a>
+      <a href="https://github.com/gentpan/liquidglass">GitHub</a>
+      <a href="../lib/components.js">components.js</a>
+      <a href="../lib/liquid-glass.js">liquid-glass.js</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

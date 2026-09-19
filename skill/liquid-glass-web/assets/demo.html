@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Glass reference page</title>
+<style>
+  :root {
+    color-scheme: light;
+    --color-primary: #2563eb;
+    --color-secondary: #0ea5e9;
+    --color-success: #16a34a;
+    --color-warning: #d97706;
+    --color-error: #dc2626;
+    --color-neutral-0: #ffffff;
+    --color-neutral-50: #f8f9fa;
+    --color-neutral-100: #f3f4f6;
+    --color-neutral-200: #e5e7eb;
+    --color-neutral-300: #d1d5db;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-xl: 24px;
+    --text-2xl: 32px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 24px;
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --surface: var(--color-neutral-0);
+    --page: var(--color-neutral-50);
+    --bleed: 16px; /* room for the lens to grow past a control's edge */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 400 var(--text-base)/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: var(--space-12) var(--space-4) var(--space-16); }
+  h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
+  h1 { font-size: var(--text-2xl); }
+  h2 { font-size: var(--text-lg); }
+  h3 { font-size: var(--text-xl); }
+  p { margin: 0; }
+  .lede { color: var(--text-secondary); margin-top: var(--space-2); }
+  .meta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); font-size: var(--text-sm); }
+  .tag { padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--shadow-1); color: var(--text-secondary); }
+  .tag b { color: var(--text-primary); font-weight: 600; }
+  section { margin-top: var(--space-12); }
+  .section-head { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-4); }
+  .section-head p { color: var(--text-secondary); font-size: var(--text-sm); }
+  .card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); padding: var(--space-6); }
+
+  /* ---------- 1. lens over live content ---------- */
+  .lens-layout { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: var(--space-6); }
+  @media (max-width: 760px) { .lens-layout { grid-template-columns: 1fr; } }
+  .lens-stage { position: relative; height: 360px; border-radius: var(--radius); overflow: hidden; touch-action: none; cursor: grab; }
+  .lens-stage:active { cursor: grabbing; }
+  .lens-surface { position: absolute; inset: 0; background: var(--surface); will-change: filter; }
+  .lens-art { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .lens-copy { position: absolute; left: var(--space-8); top: var(--space-8); width: min(420px, 70%); padding: var(--space-6); background: var(--surface); border-radius: var(--radius); }
+  .lens-copy p { margin-top: var(--space-2); color: var(--text-secondary); font-size: var(--text-sm); }
+  .lens-copy a { color: var(--color-primary); }
+  .lens-chrome { position: absolute; left: 0; top: 0; pointer-events: none; box-shadow: var(--shadow-2); }
+  .controls { display: flex; flex-direction: column; gap: var(--space-3); font-size: var(--text-xs); color: var(--text-secondary); }
+  .controls label { display: grid; grid-template-columns: 72px 1fr 40px; align-items: center; gap: var(--space-2); }
+  .controls output { text-align: right; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .controls input { width: 100%; margin: 0; accent-color: var(--color-primary); }
+  .map-preview { width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius-sm); background: rgb(128, 128, 128); display: block; }
+
+  /* ---------- 2. controls ---------- */
+  .control-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
+  .control-cell { display: flex; flex-direction: column; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+
+  /* switch */
+  .lg-switch { --p: 0; position: relative; display: inline-block; width: 64px; height: 28px; }
+  .lg-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 4; }
+  .lg-switch-track { position: absolute; inset: 0; border-radius: 14px; background: color-mix(in srgb, var(--color-neutral-300), var(--color-success) calc(var(--p) * 100%)); }
+  .lg-refract { position: absolute; pointer-events: none; background: var(--surface); z-index: 1; }
+  .lg-switch .lg-refract { left: calc(-1 * var(--bleed)); top: calc(-1 * var(--bleed)); width: calc(64px + 2 * var(--bleed)); height: calc(28px + 2 * var(--bleed)); }
+  .lg-switch-fill { position: absolute; left: var(--bleed); top: var(--bleed); width: 64px; height: 28px; border-radius: 14px; background: color-mix(in srgb, var(--color-neutral-300), var(--color-success) calc(var(--p) * 100%)); }
+  .lg-thumb { position: absolute; left: 0; top: 0; background: var(--surface); box-shadow: var(--shadow-1); pointer-events: none; z-index: 3; }
+  .lg-lens-shadow { position: absolute; left: 0; top: 0; box-shadow: var(--shadow-2); pointer-events: none; z-index: 2; opacity: 0; }
+  .lg-switch input:focus-visible ~ .lg-thumb, .lg-slider input:focus-visible ~ .lg-thumb { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+  /* slider */
+  .lg-slider { --t: 0.4; position: relative; width: 280px; height: 36px; }
+  .lg-slider input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 4; }
+  .lg-slider input::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; }
+  .lg-slider input::-moz-range-thumb { width: 36px; height: 36px; border: 0; }
+  .lg-slider-track { position: absolute; left: 0; right: 0; top: 15px; height: 6px; border-radius: 3px; background: var(--color-neutral-200); overflow: hidden; }
+  .lg-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(18px + var(--t) * (100% - 36px)); background: var(--color-primary); }
+  .lg-slider .lg-refract { left: calc(-1 * var(--bleed)); top: calc(-1 * var(--bleed)); right: calc(-1 * var(--bleed)); bottom: calc(-1 * var(--bleed)); }
+  .lg-slider .lg-refract .lg-slider-track { left: var(--bleed); right: var(--bleed); top: calc(15px + var(--bleed)); }
+
+  /* segmented control */
+  .lg-seg { position: relative; display: inline-flex; padding: var(--space-1); gap: var(--space-1); border-radius: var(--radius); background: var(--color-neutral-100); }
+  .lg-seg button, .lg-seg-copy span {
+    position: relative; z-index: 0; min-width: 64px; height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-sm);
+    background: transparent; color: var(--text-secondary); font-family: inherit; font-size: var(--text-sm); font-weight: 500; line-height: 32px; text-align: center; cursor: pointer;
+  }
+  .lg-seg button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .lg-seg .lg-refract { inset: 0; display: flex; padding: var(--space-1); gap: var(--space-1); border-radius: var(--radius); background: var(--surface); }
+  .lg-seg-copy span { color: var(--color-primary); cursor: default; }
+  .lg-seg .lg-lens-shadow { opacity: 1; box-shadow: var(--shadow-1); z-index: 2; }
+
+  /* ---------- 3. glass card over a background ---------- */
+  .bg-stage { position: relative; height: 340px; border-radius: var(--radius); overflow: hidden; background-size: cover; background-position: center; touch-action: none; }
+  .glass-card { position: absolute; left: 0; top: 0; width: 260px; height: 156px; border-radius: var(--radius-lg); box-shadow: var(--shadow-2); cursor: grab; overflow: hidden; touch-action: none; }
+  .glass-card:active { cursor: grabbing; }
+  .glass-card-backdrop { position: absolute; inset: 0; background-repeat: no-repeat; }
+  .glass-card-tint { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.16); }
+  .glass-card-body { position: relative; padding: var(--space-4) var(--space-6); color: var(--text-primary); display: flex; flex-direction: column; gap: var(--space-1); }
+  .glass-card-body b { font-size: var(--text-base); font-weight: 600; }
+  .glass-card-body span { font-size: var(--text-xs); color: var(--text-primary); }
+  .glass-card.backdrop-mode .glass-card-tint { background: rgba(255, 255, 255, 0.2); }
+
+  /* ---------- 4. WebGL ---------- */
+  .video-stage { position: relative; height: 300px; border-radius: var(--radius); overflow: hidden; background: #0b1220; }
+  .video-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .video-controls { position: absolute; inset: 0; }
+  .video-controls button { position: absolute; border: 0; background: transparent; color: #ffffff; cursor: pointer; display: grid; place-items: center; border-radius: 999px; }
+  .video-controls button:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+  .video-controls svg { width: 20px; height: 20px; }
+
+  footer { margin-top: var(--space-12); font-size: var(--text-xs); color: var(--text-tertiary); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Liquid Glass reference page</h1>
+    <p class="lede">Refraction applied to the content itself (CSS <code>filter: url()</code> + <code>feDisplacementMap</code>): Chromium, Safari and Firefox should all show the same glass.</p>
+    <div class="meta">
+      <span class="tag">Engine <b id="engine"></b></span>
+      <span class="tag">DPR <b id="dpr"></b></span>
+      <span class="tag">backdrop-filter:url <b id="backdrop-support"></b></span>
+      <span class="tag"><a href="?auto">Auto demo</a> (for screenshots) · <a href="?pressed">Pressed states</a></span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>1. Lens over live content</h2>
+      <p>Drag the lens. Text outside it is the original pixels: still selectable, the link still clickable. On the right is the displacement map driving it (R/G = bend, B = highlight).</p>
+    </div>
+    <div class="card lens-layout">
+      <div class="lens-stage" id="lens-stage">
+        <div class="lens-surface" id="lens-surface">
+          <div class="lens-art" id="lens-art"></div>
+          <div class="lens-copy">
+            <h3>Light through curved glass</h3>
+            <p>The lens bends only the pixels beneath it: flat in the middle, strongest at the rim, untouched outside. This text is selectable and <a href="#lens-stage">this link</a> is clickable.</p>
+            <p>The quick brown fox jumps over the lazy dog — 0123456789</p>
+          </div>
+        </div>
+        <div class="lens-chrome" id="lens-chrome"></div>
+      </div>
+      <div class="controls" id="controls">
+        <canvas class="map-preview" id="map-preview" aria-label="Displacement map preview"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>2. Controls: overlay copy</h2>
+      <p>The native control keeps working underneath (keyboard, screen readers, forms); an aria-hidden copy on top is clipped to the lens and filtered. Press and hold to turn the thumb into glass and squish it.</p>
+    </div>
+    <div class="card control-row">
+      <div class="control-cell">
+        <label class="lg-switch" id="switch">
+          <input type="checkbox" role="switch" aria-label="Wi-Fi">
+          <span class="lg-switch-track" aria-hidden="true"></span>
+          <span class="lg-refract" aria-hidden="true"><span class="lg-switch-fill"></span></span>
+          <span class="lg-lens-shadow" aria-hidden="true"></span>
+          <span class="lg-thumb" aria-hidden="true"></span>
+        </label>
+        Switch
+      </div>
+      <div class="control-cell">
+        <div class="lg-slider" id="slider">
+          <input type="range" min="0" max="100" value="40" aria-label="Volume">
+          <div class="lg-slider-track" aria-hidden="true"><div class="lg-slider-fill"></div></div>
+          <div class="lg-refract" aria-hidden="true"><div class="lg-slider-track"><div class="lg-slider-fill"></div></div></div>
+          <span class="lg-lens-shadow" aria-hidden="true"></span>
+          <span class="lg-thumb" aria-hidden="true"></span>
+        </div>
+        Slider
+      </div>
+      <div class="control-cell">
+        <div class="lg-seg" id="seg" role="radiogroup" aria-label="Range">
+          <button type="button" role="radio" aria-checked="true">Day</button>
+          <button type="button" role="radio" aria-checked="false">Week</button>
+          <button type="button" role="radio" aria-checked="false">Month</button>
+          <button type="button" role="radio" aria-checked="false">All</button>
+          <div class="lg-refract lg-seg-copy" aria-hidden="true"><span>Day</span><span>Week</span><span>Month</span><span>All</span></div>
+          <span class="lg-lens-shadow" aria-hidden="true"></span>
+        </div>
+        Segmented
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>3. Glass cards over a backdrop</h2>
+      <p>Left: the card holds a copy of the backdrop aligned with it and refracts that — every browser, as long as the backdrop is a known image or graphic. Right: <code>backdrop-filter: url()</code> — real refraction in Chromium only, a blur elsewhere. Both can be dragged.</p>
+    </div>
+    <div class="card">
+      <div class="bg-stage" id="bg-stage">
+        <div class="glass-card" id="copy-card">
+          <div class="glass-card-backdrop" aria-hidden="true"></div>
+          <div class="glass-card-tint" aria-hidden="true"></div>
+          <div class="glass-card-body"><b>Backdrop copy</b><span>Every browser · known backdrop</span></div>
+        </div>
+        <div class="glass-card backdrop-mode" id="backdrop-card">
+          <div class="glass-card-tint" aria-hidden="true"></div>
+          <div class="glass-card-body"><b>backdrop-filter:url</b><span id="backdrop-note"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>4. WebGL: video / canvas</h2>
+      <p>Safari never runs SVG filters on a playing &lt;video&gt;, so such surfaces are refracted in WebGL from the same displacement map. A canvas animation stands in for a video here; the API is the same.</p>
+    </div>
+    <div class="card">
+      <div class="video-stage" id="video-stage">
+        <canvas id="video-out"></canvas>
+        <div class="video-controls" id="video-controls">
+          <button type="button" data-lens="0" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19l-7-7 7-7"/><path d="M20 19l-7-7 7-7"/></svg></button>
+          <button type="button" data-lens="1" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+          <button type="button" data-lens="2" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"/><path d="M4 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Technique after Aave Labs, “Building Glass for the Web”; this page and liquid-glass.js are an independent implementation of the published approach.</footer>
+</main>
+
+<script type="module">
+import { createGlass, createSpring, renderLensMap, engine, reducedMotion } from './liquid-glass.js';
+import { createGlassRenderer } from './glass-webgl.js';
+
+const query = new URLSearchParams(location.search);
+const AUTO = query.has('auto');
+const PRESSED = query.has('pressed'); // freeze controls in their pressed (glass) state for screenshots
+const $ = (s, root = document) => root.querySelector(s);
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+$('#engine').textContent = engine;
+$('#dpr').textContent = String(window.devicePixelRatio);
+$('#backdrop-support').textContent = engine === 'blink' ? 'refracts' : 'falls back to blur';
+
+/* ---------------------------------------------------------------- art (content to refract) */
+const ART = `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="stripes" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <rect width="24" height="24" fill="#f4efe6"/><rect width="10" height="24" fill="#e7dccb"/>
+    </pattern>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="14" cy="14" r="3" fill="#1f2937" opacity="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="520" fill="url(#stripes)"/>
+  <circle cx="860" cy="170" r="190" fill="#1e3a8a"/>
+  <circle cx="1040" cy="380" r="150" fill="#0ea5e9"/>
+  <circle cx="700" cy="420" r="120" fill="#f59e0b"/>
+  <rect x="560" y="40" width="160" height="160" rx="32" fill="#ef4444"/>
+  <circle cx="160" cy="430" r="110" fill="#0d9488"/>
+  <rect x="0" y="0" width="1200" height="520" fill="url(#dots)" opacity="0.6"/>
+  <text x="600" y="330" font-family="Georgia, serif" font-size="120" font-weight="700" fill="#111827">Liquid Glass</text>
+  <g stroke="#111827" stroke-width="3" opacity="0.8">
+    <line x1="560" y1="360" x2="1180" y2="360"/><line x1="560" y1="372" x2="1180" y2="372"/><line x1="560" y1="384" x2="1180" y2="384"/>
+  </g>
+</svg>`)}`;
+
+/* ---------------------------------------------------------------- 1. lens over content */
+const stage = $('#lens-stage');
+const surface = $('#lens-surface');
+const chrome = $('#lens-chrome');
+$('#lens-art').style.backgroundImage = `url("${ART}")`;
+
+const optics = { width: 180, height: 120, radius: 60, refraction: 28, bezel: 0.6, curvature: 4, ior: 1.5, chroma: 0.15, blur: 0, specular: 0.5, lightAngle: -60 };
+const lens = createGlass(surface, optics);
+const pos = { x: 520, y: 150 };
+let press = 0;
+
+function lensGeometry() {
+  const w = optics.width * (1 + 0.1 * press);
+  const h = optics.height * (1 - 0.06 * press);
+  const x = clamp(pos.x - w / 2, 0, stage.clientWidth - w);
+  const y = clamp(pos.y - h / 2, 0, stage.clientHeight - h);
+  return { x, y, width: w, height: h, radius: Math.min(optics.radius, w / 2, h / 2) };
+}
+
+function renderLens() {
+  const g = lensGeometry();
+  lens.update({ ...optics, ...g });
+  chrome.style.width = `${g.width}px`;
+  chrome.style.height = `${g.height}px`;
+  chrome.style.borderRadius = `${g.radius}px`;
+  chrome.style.transform = `translate(${g.x}px, ${g.y}px)`;
+}
+
+const pressSpring = createSpring(0, (v) => { press = v; renderLens(); });
+if (PRESSED) pressSpring.set(1, { immediate: true });
+let dragging = false;
+stage.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('a')) return;
+  dragging = true;
+  stage.setPointerCapture(e.pointerId);
+  pressSpring.set(1);
+  moveTo(e);
+});
+stage.addEventListener('pointermove', (e) => { if (dragging) moveTo(e); });
+stage.addEventListener('pointerup', () => { dragging = false; pressSpring.set(0); });
+stage.addEventListener('pointercancel', () => { dragging = false; pressSpring.set(0); });
+function moveTo(e) {
+  const r = stage.getBoundingClientRect();
+  pos.x = e.clientX - r.left;
+  pos.y = e.clientY - r.top;
+  renderLens();
+}
+
+// parameter panel
+const controls = $('#controls');
+const preview = $('#map-preview');
+const SLIDERS = [
+  ['refraction', 'Refraction', 0, 60, 1],
+  ['bezel', 'Bezel', 0.1, 1, 0.05],
+  ['curvature', 'Curvature', 1.5, 8, 0.5],
+  ['ior', 'IOR', 1.1, 2.4, 0.05],
+  ['chroma', 'Chroma', 0, 0.5, 0.01],
+  ['blur', 'Frost', 0, 8, 0.5],
+  ['specular', 'Highlight', 0, 1, 0.05],
+  ['lightAngle', 'Light angle', -180, 180, 5],
+  ['width', 'Width', 60, 320, 2],
+  ['height', 'Height', 40, 240, 2],
+  ['radius', 'Radius', 0, 120, 2],
+];
+for (const [key, label, min, max, step] of SLIDERS) {
+  const row = document.createElement('label');
+  row.innerHTML = `<span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${optics[key]}"><output>${optics[key]}</output>`;
+  const input = $('input', row);
+  const out = $('output', row);
+  input.addEventListener('input', () => {
+    optics[key] = Number(input.value);
+    out.textContent = input.value;
+    renderLens();
+    drawPreview();
+  });
+  controls.appendChild(row);
+}
+function drawPreview() {
+  const { canvas } = renderLensMap({ ...optics }, 1);
+  preview.width = preview.clientWidth * devicePixelRatio;
+  preview.height = preview.clientHeight * devicePixelRatio;
+  const ctx = preview.getContext('2d');
+  ctx.fillStyle = 'rgb(128,128,128)';
+  ctx.fillRect(0, 0, preview.width, preview.height);
+  const s = Math.min(preview.width / canvas.width, preview.height / canvas.height) * 0.9;
+  const w = canvas.width * s;
+  const h = canvas.height * s;
+  ctx.drawImage(canvas, (preview.width - w) / 2, (preview.height - h) / 2, w, h);
+}
+renderLens();
+drawPreview();
+
+/* ---------------------------------------------------------------- 2a. switch */
+function glassSwitch(root) {
+  const input = $('input', root);
+  const refract = $('.lg-refract', root);
+  const thumb = $('.lg-thumb', root);
+  const shadow = $('.lg-lens-shadow', root);
+  const bleed = 16;
+  const glass = createGlass(refract, { clip: true, refraction: 10, bezel: 0.9, curvature: 3, chroma: 0.2, specular: 0.7, specularWidth: 1.5 });
+  let x = input.checked ? 1 : 0;
+  let v = 0;
+  let p = 0;
+
+  function render() {
+    const stretch = Math.min(10, Math.abs(v) * 1.6);
+    const w = lerp(36, 54, p) + stretch;
+    const h = lerp(24, 36, p) - stretch * 0.2;
+    const cx = 20 + 24 * x;
+    const left = cx - w / 2;
+    const top = 14 - h / 2;
+    const r = h / 2;
+    root.style.setProperty('--p', x.toFixed(3));
+    glass.update({ x: left + bleed, y: top + bleed, width: w, height: h, radius: r });
+    for (const el of [thumb, shadow]) {
+      el.style.width = `${w}px`;
+      el.style.height = `${h}px`;
+      el.style.borderRadius = `${r}px`;
+      el.style.transform = `translate(${left}px, ${top}px)`;
+    }
+    thumb.style.opacity = String(1 - p);
+    shadow.style.opacity = String(p);
+  }
+  const xs = createSpring(x, (val, vel) => { x = val; v = vel; render(); }, { stiffness: 420, damping: 30 });
+  const ps = createSpring(0, (val) => { p = val; render(); }, { stiffness: 600, damping: 36 });
+  input.addEventListener('pointerdown', () => ps.set(1));
+  const release = () => ps.set(0);
+  input.addEventListener('pointerup', release);
+  input.addEventListener('pointercancel', release);
+  input.addEventListener('pointerleave', release);
+  input.addEventListener('change', () => xs.set(input.checked ? 1 : 0));
+  render();
+  if (PRESSED) ps.set(1, { immediate: true });
+  return { toggle() { input.checked = !input.checked; input.dispatchEvent(new Event('change')); }, press: (on) => ps.set(on ? 1 : 0) };
+}
+const sw = glassSwitch($('#switch'));
+
+/* ---------------------------------------------------------------- 2b. slider */
+function glassSlider(root) {
+  const input = $('input', root);
+  const refract = $('.lg-refract', root);
+  const thumb = $('.lg-thumb', root);
+  const shadow = $('.lg-lens-shadow', root);
+  const bleed = 16;
+  // Softer bend than the switch: the fill under the glass has to stay readable as a value.
+  const glass = createGlass(refract, { clip: true, refraction: 6, bezel: 0.9, curvature: 3, chroma: 0.15, specular: 0.7, specularWidth: 1.5 });
+  let t = input.valueAsNumber / 100;
+  let v = 0;
+  let p = 0;
+
+  function render() {
+    const width = root.clientWidth;
+    const stretch = Math.min(10, Math.abs(v) * 1.2);
+    const w = lerp(36, 52, p) + stretch;
+    const h = lerp(24, 34, p) - stretch * 0.2;
+    const cx = 18 + t * (width - 36);
+    const left = cx - w / 2;
+    const top = 18 - h / 2;
+    const r = h / 2;
+    root.style.setProperty('--t', t.toFixed(4));
+    glass.update({ x: left + bleed, y: top + bleed, width: w, height: h, radius: r });
+    for (const el of [thumb, shadow]) {
+      el.style.width = `${w}px`;
+      el.style.height = `${h}px`;
+      el.style.borderRadius = `${r}px`;
+      el.style.transform = `translate(${left}px, ${top}px)`;
+    }
+    thumb.style.opacity = String(1 - p);
+    shadow.style.opacity = String(p);
+  }
+  const ts = createSpring(t, (val, vel) => { t = val; v = vel; render(); }, { stiffness: 900, damping: 50 });
+  const ps = createSpring(0, (val) => { p = val; render(); }, { stiffness: 600, damping: 36 });
+  input.addEventListener('input', () => ts.set(input.valueAsNumber / 100));
+  input.addEventListener('pointerdown', () => ps.set(1));
+  const release = () => ps.set(0);
+  input.addEventListener('pointerup', release);
+  input.addEventListener('pointercancel', release);
+  render();
+  if (PRESSED) ps.set(1, { immediate: true });
+  return {
+    set(value) { input.value = String(value); input.dispatchEvent(new Event('input')); },
+    press: (on) => ps.set(on ? 1 : 0),
+  };
+}
+const slider = glassSlider($('#slider'));
+
+/* ---------------------------------------------------------------- 2c. segmented control */
+function glassSegmented(root) {
+  const buttons = [...root.querySelectorAll('button')];
+  const refract = $('.lg-refract', root);
+  const shadow = $('.lg-lens-shadow', root);
+  // Thin bezel: the label under the glass must stay legible, only the rim should bend.
+  const glass = createGlass(refract, { clip: true, refraction: 5, bezel: 0.35, curvature: 4, chroma: 0.2, specular: 0.6, specularWidth: 1.5 });
+  let index = Math.max(0, buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true'));
+  let x = buttons[index].offsetLeft;
+  let v = 0;
+
+  function widthAt(pos) {
+    // Interpolate the lens width between the two buttons it is travelling between.
+    const lefts = buttons.map((b) => b.offsetLeft);
+    let i = 0;
+    while (i < buttons.length - 2 && pos > lefts[i + 1]) i++;
+    const f = clamp((pos - lefts[i]) / (lefts[i + 1] - lefts[i] || 1), 0, 1);
+    return lerp(buttons[i].offsetWidth, buttons[i + 1].offsetWidth, f);
+  }
+  function render() {
+    const stretch = Math.min(12, Math.abs(v) * 0.02);
+    const w = widthAt(x) + stretch;
+    const h = buttons[0].offsetHeight - stretch * 0.25;
+    const left = x - stretch / 2;
+    const top = buttons[0].offsetTop + (buttons[0].offsetHeight - h) / 2;
+    const r = 8;
+    glass.update({ x: left, y: top, width: w, height: h, radius: r });
+    shadow.style.width = `${w}px`;
+    shadow.style.height = `${h}px`;
+    shadow.style.borderRadius = `${r}px`;
+    shadow.style.transform = `translate(${left}px, ${top}px)`;
+  }
+  const xs = createSpring(x, (val, vel) => { x = val; v = vel; render(); }, { stiffness: 380, damping: 28 });
+  function select(i, focus) {
+    index = (i + buttons.length) % buttons.length;
+    buttons.forEach((b, j) => {
+      b.setAttribute('aria-checked', String(j === index));
+      b.tabIndex = j === index ? 0 : -1;
+    });
+    if (focus) buttons[index].focus();
+    xs.set(buttons[index].offsetLeft);
+  }
+  buttons.forEach((b, i) => b.addEventListener('click', () => select(i, false)));
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); select(index + 1, true); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); select(index - 1, true); }
+  });
+  select(index, false);
+  render();
+  if (PRESSED) {
+    // Park the lens half-way between two options, as it looks mid-travel.
+    xs.set((buttons[0].offsetLeft + buttons[1].offsetLeft) / 2, { immediate: true });
+  }
+  return { next: () => select(index + 1, false) };
+}
+const seg = glassSegmented($('#seg'));
+
+/* ---------------------------------------------------------------- 3. cards over a background */
+const bgStage = $('#bg-stage');
+bgStage.style.backgroundImage = `url("${ART}")`;
+const copyCard = $('#copy-card');
+const copyBackdrop = $('.glass-card-backdrop', copyCard);
+copyBackdrop.style.backgroundImage = `url("${ART}")`;
+const copyGlass = createGlass(copyBackdrop, { fit: true, radius: 24, refraction: 26, bezel: 0.35, curvature: 4, chroma: 0.12, specular: 0.55, blur: 0 });
+const backdropCard = $('#backdrop-card');
+createGlass(backdropCard, { mode: 'backdrop', fit: true, radius: 24, refraction: 26, bezel: 0.35, curvature: 4, chroma: 0.12, specular: 0.55 });
+$('#backdrop-note').textContent = engine === 'blink' ? 'Chromium: real refraction' : 'Not Chromium: blur fallback';
+
+const cards = new Map([[copyCard, { x: 48, y: 72 }], [backdropCard, { x: 420, y: 120 }]]);
+function placeCard(card) {
+  const p = cards.get(card);
+  p.x = clamp(p.x, 0, bgStage.clientWidth - card.offsetWidth);
+  p.y = clamp(p.y, 0, bgStage.clientHeight - card.offsetHeight);
+  card.style.transform = `translate(${p.x}px, ${p.y}px)`;
+  if (card === copyCard) {
+    // Keep the copy registered with the real background underneath the card.
+    copyBackdrop.style.backgroundSize = `${bgStage.clientWidth}px ${bgStage.clientHeight}px`;
+    copyBackdrop.style.backgroundPosition = `${-p.x}px ${-p.y}px`;
+  }
+}
+for (const card of cards.keys()) {
+  let start = null;
+  card.addEventListener('pointerdown', (e) => {
+    card.setPointerCapture(e.pointerId);
+    const p = cards.get(card);
+    start = { px: e.clientX, py: e.clientY, x: p.x, y: p.y };
+  });
+  card.addEventListener('pointermove', (e) => {
+    if (!start) return;
+    const p = cards.get(card);
+    p.x = start.x + e.clientX - start.px;
+    p.y = start.y + e.clientY - start.py;
+    placeCard(card);
+  });
+  const end = () => { start = null; };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+  placeCard(card);
+}
+new ResizeObserver(() => cards.forEach((_, card) => placeCard(card))).observe(bgStage);
+
+/* ---------------------------------------------------------------- 4. WebGL over a moving source */
+const videoStage = $('#video-stage');
+const source = document.createElement('canvas'); // stands in for a <video>
+const sctx = source.getContext('2d');
+let playing = true;
+let clock = 0;
+function paintSource(dt) {
+  source.width = videoStage.clientWidth;
+  source.height = videoStage.clientHeight;
+  if (playing) clock += dt;
+  const W = source.width;
+  const H = source.height;
+  sctx.fillStyle = '#0b1220';
+  sctx.fillRect(0, 0, W, H);
+  const colors = ['#1e3a8a', '#0ea5e9', '#f59e0b', '#ef4444', '#0d9488'];
+  for (let i = 0; i < 14; i++) {
+    sctx.fillStyle = colors[i % colors.length];
+    const x = ((i * 97 + clock * (30 + i * 6)) % (W + 160)) - 80;
+    sctx.fillRect(x, 0, 18 + (i % 3) * 10, H);
+  }
+  sctx.fillStyle = '#ffffff';
+  sctx.font = '600 56px Georgia, serif';
+  sctx.fillText('LIVE', 32 + Math.sin(clock) * 40, 96);
+}
+const out = $('#video-out');
+const renderer = createGlassRenderer(out, source);
+const controlButtons = [...document.querySelectorAll('#video-controls button')];
+function layoutVideoLenses() {
+  const W = videoStage.clientWidth;
+  const H = videoStage.clientHeight;
+  const cy = H - 64;
+  const specs = [
+    { cx: W / 2 - 88, size: 48 },
+    { cx: W / 2, size: 64 },
+    { cx: W / 2 + 88, size: 48 },
+  ];
+  const optic = { refraction: 14, bezel: 0.8, curvature: 3, chroma: 0.25, specular: 0.8, specularWidth: 1.5 };
+  const list = specs.map(({ cx, size }) => ({ ...optic, x: cx - size / 2, y: cy - size / 2, width: size, height: size, radius: size / 2 }));
+  list.push({ ...optic, refraction: 8, x: 24, y: H - 20 - 8, width: W - 48, height: 12, radius: 6, bezel: 1 });
+  renderer.setLenses(list);
+  controlButtons.forEach((b, i) => {
+    const l = list[i];
+    Object.assign(b.style, { left: `${l.x}px`, top: `${l.y}px`, width: `${l.width}px`, height: `${l.height}px` });
+  });
+}
+controlButtons[1].addEventListener('click', () => {
+  playing = !playing;
+  controlButtons[1].setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  controlButtons[1].innerHTML = playing
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"/></svg>';
+});
+controlButtons[0].addEventListener('click', () => { clock -= 2; });
+controlButtons[2].addEventListener('click', () => { clock += 2; });
+layoutVideoLenses();
+new ResizeObserver(layoutVideoLenses).observe(videoStage);
+let last = performance.now();
+function tick(now) {
+  paintSource(reducedMotion.matches ? 0 : (now - last) / 1000);
+  last = now;
+  renderer.render();
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ---------------------------------------------------------------- auto mode for screenshots */
+if (AUTO) {
+  let n = 0;
+  setInterval(() => {
+    n++;
+    sw.press(true);
+    setTimeout(() => { sw.toggle(); sw.press(false); }, 260);
+    slider.press(true);
+    slider.set(Math.round(50 + 45 * Math.sin(n * 0.9)));
+    setTimeout(() => slider.press(false), 500);
+    seg.next();
+  }, 1600);
+  const t0 = performance.now();
+  (function wander(now) {
+    const t = (now - t0) / 1000;
+    pos.x = stage.clientWidth / 2 + Math.sin(t * 0.7) * stage.clientWidth * 0.32;
+    pos.y = stage.clientHeight / 2 + Math.sin(t * 1.1) * stage.clientHeight * 0.25;
+    press = (Math.sin(t * 2) + 1) / 2;
+    renderLens();
+    const p = cards.get(copyCard);
+    p.x = 48 + Math.sin(t * 0.5) * 120;
+    p.y = 72 + Math.cos(t * 0.6) * 60;
+    placeCard(copyCard);
+    requestAnimationFrame(wander);
+  })(t0);
+}
+</script>
+</body>
+</html>
