@@ -1,11 +1,14 @@
 #!/bin/sh
 # Sync the static site to the server and install the Caddy site config when it changed.
-#   scripts/deploy.sh                                  (defaults below)
 #   SERVER=user@host KEY=path/to/key scripts/deploy.sh
+# Put SERVER and KEY in your shell profile or a git-ignored .deploy.env next to this repo's root.
 set -eu
 cd "$(dirname "$0")/.."
-SERVER=${SERVER:-root@51.38.126.148}
-KEY=${KEY:-$HOME/Desktop/gentpan.pem}
+# shellcheck disable=SC1091
+[ -f .deploy.env ] && . ./.deploy.env
+: "${SERVER:?set SERVER=user@host (env or .deploy.env)}"
+: "${KEY:?set KEY=path/to/ssh-key (env or .deploy.env)}"
+case "$KEY" in *[[:space:]]*) echo "KEY path must not contain spaces" >&2; exit 1 ;; esac
 SSH="ssh -i $KEY -o IdentitiesOnly=yes"
 DEST=/var/www/liquidglass.dev
 

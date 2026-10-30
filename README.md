@@ -25,6 +25,14 @@ Most web liquid-glass demos put an SVG filter in `backdrop-filter: url()`. Only 
 </lg-segmented>
 ```
 
+**Pin a version in production.** `liquidglass.dev/lib/` always serves the latest release. To lock one, load it from jsDelivr by git tag:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/gh/gentpan/liquidglass@v1.0.1/lib/components.js"></script>
+```
+
+TypeScript declarations ship next to each module (`lib/*.d.ts`).
+
 Glass over an image — mark the backdrop and everything inside refracts it in every browser:
 
 ```html
@@ -121,7 +129,8 @@ install-skill.sh           one-line skill installer served at liquidglass.dev
 python3 skill/liquid-glass-web/scripts/serve.py . 4180         # serve locally (avoid blocked ports such as 4190)
 skill/liquid-glass-web/scripts/shoot.sh "http://localhost:4180/?hold=3000" out 1280 5200   # Chrome, WebKit, Firefox
 scripts/sync-skill.sh                                          # after changing lib/
-scripts/deploy.sh                                              # rsync to the server, reload Caddy if its config changed
+npm test                                                       # smoke tests in headless Chromium
+scripts/deploy.sh                                              # rsync to the server (SERVER/KEY from env or .deploy.env)
 ```
 
 ## Credits and license
@@ -135,7 +144,7 @@ MIT. The idea of refracting live DOM with a displacement map instead of `backdro
 **Liquid Glass for the Web**：让网页里的玻璃像 Apple Liquid Glass 一样真实地弯折光线，而且在 **Chrome、Safari、Firefox** 里效果一致。仓库里有三样东西：一组 Web Components、一个零依赖的折射引擎，以及一个教 AI 编程工具实现这种效果的 skill。
 
 - **为什么能跨浏览器**：网上的 demo 大多用 `backdrop-filter: url()`，只有 Chromium 会渲染。这里改为用普通 CSS `filter` 挂 SVG `feDisplacementMap`，弯折元素自己的像素；浮在照片上的玻璃，折射的是一份与照片对齐的副本。位移贴图按每个透镜的形状在运行时生成；WebKit、Gecko 与 Blink 的差异都经过实测并做了补偿。
-- **快速开始**：`<script type="module" src="https://liquidglass.dev/lib/components.js"></script>`，然后直接写 `<lg-switch>`、`<lg-slider>`、`<lg-navbar>` 等元素。在照片上用玻璃时，给容器加 `data-lg-backdrop="img"`。
+- **快速开始**：`<script type="module" src="https://liquidglass.dev/lib/components.js"></script>`，然后直接写 `<lg-switch>`、`<lg-slider>`、`<lg-navbar>` 等元素。在照片上用玻璃时，给容器加 `data-lg-backdrop="img"`。生产环境建议固定版本：`https://cdn.jsdelivr.net/gh/gentpan/liquidglass@v1.0.1/lib/components.js`。
 - **组件**：开关、滑块、分段控件、按钮、面板、导航栏、菜单栏与菜单、Toast、Dock、放大镜。完整属性和示例见[文档](https://liquidglass.dev/docs/)（右上角可切换中文）。
 - **AI skill 安装**（Claude Code / Codex）：
 
