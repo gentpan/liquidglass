@@ -88,20 +88,40 @@
       <h3>React / Next.js</h3>
       <script type="text/plain" data-code="js" data-title="Glass.jsx">
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function Settings() {
-  useEffect(() => { import('https://liquidglass.dev/lib/components.js'); }, []);
-  return (
-    <lg-switch checked onChange={(e) => console.log(e.target.checked)}>Wi-Fi</lg-switch>
-  );
+  const ref = useRef(null);
+  useEffect(() => {
+    // webpackIgnore: let the browser load the URL instead of the bundler
+    import(/* webpackIgnore: true */ 'https://liquidglass.dev/lib/components.js');
+    // React 18 does not wire onChange on custom elements; listen directly
+    const el = ref.current;
+    const log = (e) => console.log(e.target.checked);
+    el.addEventListener('change', log);
+    return () => el.removeEventListener('change', log);
+  }, []);
+  return <lg-switch ref={ref} checked>Wi-Fi</lg-switch>;
 }
       </script>
-      <h3>Vue</h3>
+      <h3>Vue (Vite)</h3>
+      <script type="text/plain" data-code="js" data-title="vite.config.js">
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [
+    // Tell Vue's template compiler that lg-* tags are custom elements
+    vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith('lg-') } } }),
+  ],
+});
+      </script>
       <script type="text/plain" data-code="js" data-title="main.js">
-// Tell Vue that lg-* tags are custom elements
-app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith('lg-');
-import('https://liquidglass.dev/lib/components.js');
+import { createApp } from 'vue';
+import App from './App.vue';
+
+import(/* @vite-ignore */ 'https://liquidglass.dev/lib/components.js');
+createApp(App).mount('#app');
       </script>
     </section>
 
@@ -403,7 +423,8 @@ toast('New message', { icon: 'bell', container: document.querySelector('.stage')
           <tr><td><code>icon</code></td><td><span data-l="en"><code>check</code>, <code>info</code>, <code>alert</code>, <code>bell</code>, your own SVG markup, or <code>null</code>.</span><span data-l="zh"><code>check</code>、<code>info</code>、<code>alert</code>、<code>bell</code>、自定义 SVG，或 <code>null</code>。</span></td></tr>
           <tr><td><code>duration</code></td><td><span data-l="en">Milliseconds before it leaves (default 2600, 0 keeps it). Clicking dismisses.</span><span data-l="zh">多少毫秒后离开（默认 2600，0 表示不自动离开）。点击可关闭。</span></td></tr>
           <tr><td><code>container</code></td><td><span data-l="en">Element to show it in (default <code>document.body</code>, fixed to the viewport).</span><span data-l="zh">显示在哪个元素里（默认 <code>document.body</code>，固定在视口）。</span></td></tr>
-          <tr><td><code>tone</code>, <code>backdrop</code></td><td><span data-l="en">As on buttons.</span><span data-l="zh">与按钮相同。</span></td></tr>
+          <tr><td><code>tone</code></td><td><span data-l="en">Omit for white text on dark glass; <code>light</code> for dark text on pale glass.</span><span data-l="zh">不填为深色玻璃白字；<code>light</code> 为浅色玻璃深色字。</span></td></tr>
+          <tr><td><code>backdrop</code></td><td><span data-l="en">As on buttons.</span><span data-l="zh">与按钮相同。</span></td></tr>
           <tr><td><span data-l="en">returns</span><span data-l="zh">返回值</span></td><td><code>{ close(), element }</code></td></tr>
         </tbody>
       </table></div>

@@ -48,7 +48,7 @@ export const zh = {
   'how.f5.title': '下面是真实控件',
   'how.f5.text': '开关和滑块都是原生 input，上面盖一层装饰用的玻璃副本。焦点环、键盘、读屏、减少动效全部正常。',
   'how.f6.title': '零依赖',
-  'how.f6.text': '两个 ES 模块，gzip 后加起来约 30 KB。纯 HTML、React、Vue、Svelte，只要能渲染 DOM 就能用。',
+  'how.f6.text': '两个 ES 模块，gzip 后加起来约 22 KB。纯 HTML、React、Vue、Svelte，只要能渲染 DOM 就能用。',
 
   'sup.eyebrow': '浏览器支持',
   'sup.title': '三个引擎逐一验证过。',

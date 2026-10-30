@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Library and skill copies match
+        run: npm run check:sync
+      - name: Shell scripts parse
+        run: |
+          sh -n install-skill.sh
+          sh -n scripts/deploy.sh
+          sh -n scripts/sync-skill.sh
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm test

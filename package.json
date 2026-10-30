@@ -1,0 +1,30 @@
+{
+  "name": "liquidglass-web",
+  "version": "1.0.1",
+  "description": "Refractive liquid glass for the web: web components and a zero-dependency refraction engine that render in Chrome, Safari and Firefox.",
+  "type": "module",
+  "main": "./lib/components.js",
+  "module": "./lib/components.js",
+  "types": "./lib/components.d.ts",
+  "exports": {
+    ".": { "types": "./lib/components.d.ts", "default": "./lib/components.js" },
+    "./components": { "types": "./lib/components.d.ts", "default": "./lib/components.js" },
+    "./engine": { "types": "./lib/liquid-glass.d.ts", "default": "./lib/liquid-glass.js" },
+    "./webgl": { "types": "./lib/glass-webgl.d.ts", "default": "./lib/glass-webgl.js" },
+    "./lib/*": "./lib/*"
+  },
+  "sideEffects": ["./lib/components.js"],
+  "files": ["lib/", "README.md", "LICENSE", "CHANGELOG.md"],
+  "scripts": {
+    "test": "node tests/smoke.cjs",
+    "check:sync": "for f in liquid-glass.js glass-webgl.js components.js; do cmp lib/$f skill/liquid-glass-web/assets/$f || exit 1; done"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  },
+  "keywords": ["liquid-glass", "glassmorphism", "web-components", "svg-filter", "refraction", "custom-elements"],
+  "homepage": "https://liquidglass.dev",
+  "repository": { "type": "git", "url": "git+https://github.com/gentpan/liquidglass.git" },
+  "bugs": "https://github.com/gentpan/liquidglass/issues",
+  "license": "MIT"
+}
