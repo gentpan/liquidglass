@@ -15,7 +15,7 @@
   --color-error: #dc2626;
   --text-primary: #111827;
   --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
+  --text-tertiary: #6b7280; /* 4.5:1 on white (WCAG AA) */
 
   --text-xs: 12px;
   --text-sm: 14px;

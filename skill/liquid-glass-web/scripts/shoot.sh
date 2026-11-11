@@ -35,7 +35,9 @@ fi
 if [[ -x "$FIREFOX" ]]; then
   mkdir -p "$CACHE/firefox"
   print 'user_pref("browser.shell.checkDefaultBrowser", false);' > "$CACHE/firefox/user.js"
-  timeout 60 "$FIREFOX" --headless --no-remote --profile "$CACHE/firefox" --window-size=$W,$H \
+  # macOS has no `timeout`; use it (or Homebrew's gtimeout) only when present.
+  TO=(); command -v timeout >/dev/null && TO=(timeout 60) || { command -v gtimeout >/dev/null && TO=(gtimeout 60); }
+  "${TO[@]}" "$FIREFOX" --headless --no-remote --profile "$CACHE/firefox" --window-size=$W,$H \
     --screenshot "$OUT/firefox.png" "$URL" >/dev/null 2>&1 && echo "firefox -> $OUT/firefox.png"
 else
   echo "firefox skipped (not installed)"

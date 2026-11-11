@@ -5,7 +5,7 @@
 
 Extras over `python3 -m http.server`:
   * Cache-Control: no-store, so edited JS is always re-fetched.
-  * `<page>.html?hold=<ms>` injects an <img> that answers after <ms>. `firefox --screenshot` shoots
+  * `<page>.html?hold=<ms>` (or a directory URL such as `/?hold=<ms>`, served as its index.html) injects an <img> that answers after <ms>. `firefox --screenshot` shoots
     as soon as the load event fires — before the displacement maps have decoded and the first
     animation frames have run — and a pending image holds that event back.
 """
@@ -20,6 +20,13 @@ PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 4180
 GIF = bytes.fromhex('47494638396101000100800000000000ffffff21f90401000000002c00000000010001000002024401003b')
 
 
+def _int(value, default):
+    try:
+        return max(0, int(value))
+    except ValueError:
+        return default
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
@@ -32,15 +39,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         url = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(url.query)
         if url.path == '/__delay':
-            time.sleep(min(int(query.get('ms', ['1000'])[0]), 20000) / 1000)
+            time.sleep(min(_int(query.get('ms', ['1000'])[0], 1000), 20000) / 1000)
             return self._send(GIF, 'image/gif')
-        if url.path.endswith('.html') and 'hold' in query:
-            path = os.path.normpath(os.path.join(ROOT, url.path.lstrip('/')))
-            if not path.startswith(ROOT) or not os.path.isfile(path):
+        page = url.path + 'index.html' if url.path.endswith('/') else url.path
+        if page.endswith('.html') and 'hold' in query:
+            path = os.path.normpath(os.path.join(ROOT, urllib.parse.unquote(page).lstrip('/')))
+            if os.path.commonpath([ROOT, path]) != ROOT or not os.path.isfile(path):
                 return super().do_GET()
             with open(path, 'rb') as f:
                 body = f.read()
-            ms = int(query['hold'][0])
+            ms = _int(query['hold'][0], 2500)
             body = body.replace(b'</body>', f'<img src="/__delay?ms={ms}" alt="" hidden></body>'.encode(), 1)
             return self._send(body, 'text/html; charset=utf-8')
         return super().do_GET()

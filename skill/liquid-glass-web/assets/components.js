@@ -1,5 +1,5 @@
 /**
- * components.js v1.0.0 — Liquid Glass web components.
+ * components.js v1.0.1 — Liquid Glass web components.
  *
  *   <script type="module" src="https://liquidglass.dev/lib/components.js"></script>
  *   <lg-switch checked>Wi-Fi</lg-switch>
@@ -497,7 +497,10 @@ class Surface {
 /* Base element                                                                                       */
 /* ------------------------------------------------------------------------------------------------ */
 
-class LgElement extends HTMLElement {
+// Importing on a server (SSR) must not crash: HTMLElement only exists in the browser.
+const Base = typeof HTMLElement === 'undefined' ? class {} : HTMLElement;
+
+class LgElement extends Base {
   connectedCallback() {
     injectStyles();
     if (!this._built) {
@@ -587,6 +590,12 @@ class LgSwitch extends LgElement {
     return this.input ? this.input.checked : this.hasAttribute('checked');
   }
   set checked(v) {
+    // Set the input directly: after a click the attribute and the input can disagree, and
+    // toggling an attribute to the state it already has fires no attributeChangedCallback.
+    if (this.input) {
+      this.input.checked = !!v;
+      this.xs.set(this.input.checked ? 1 : 0);
+    }
     this.toggleAttribute('checked', !!v);
   }
 
@@ -611,7 +620,7 @@ class LgSwitch extends LgElement {
 /* ------------------------------------------------------------------------------------------------ */
 
 class LgSlider extends LgElement {
-  static observedAttributes = ['value', 'disabled'];
+  static observedAttributes = ['value', 'disabled', 'min', 'max', 'step'];
 
   build() {
     this.control = el('div', 'lg-slider__control');
@@ -671,10 +680,15 @@ class LgSlider extends LgElement {
 
   attributeChangedCallback(name) {
     if (!this.input) return;
-    if (name === 'value') {
-      this.input.value = this.getAttribute('value');
-      this.ts.set(this.fraction());
-    } else this.input.disabled = this.hasAttribute('disabled');
+    if (name === 'disabled') {
+      this.input.disabled = this.hasAttribute('disabled');
+      return;
+    }
+    const v = this.getAttribute(name);
+    if (name === 'value') this.input.value = v ?? '';
+    else if (v === null) this.input.removeAttribute(name);
+    else this.input.setAttribute(name, v);
+    this.ts.set(this.fraction());
   }
 
   get value() {
@@ -774,6 +788,10 @@ class LgSegmented extends LgElement {
     return b ? b.value || b.textContent.trim() : this.getAttribute('value');
   }
   set value(v) {
+    if (!this.buttons) {
+      this.setAttribute('value', String(v)); // not built yet: picked up on connect
+      return;
+    }
     const i = this.buttons.findIndex((b) => (b.value || b.textContent.trim()) === String(v));
     if (i >= 0) this.select(i);
   }
@@ -1022,7 +1040,11 @@ class LgMenu extends LgElement {
       node.setAttribute('role', 'menuitem');
       node.tabIndex = -1;
       const shortcut = node.getAttribute('data-shortcut');
-      if (shortcut) node.insertAdjacentHTML('beforeend', `<kbd>${shortcut}</kbd>`);
+      if (shortcut) {
+        const kbd = el('kbd');
+        kbd.textContent = shortcut;
+        node.append(kbd);
+      }
       const c = el('span');
       c.innerHTML = node.innerHTML;
       this.copy.append(c);
