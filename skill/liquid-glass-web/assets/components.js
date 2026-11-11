@@ -48,11 +48,11 @@ lg-switch, lg-slider, lg-segmented, lg-button, lg-panel, lg-navbar, lg-menubar, 
 :is(lg-switch, lg-slider, lg-segmented, lg-button, lg-panel, lg-navbar, lg-menubar, lg-menu, lg-toast, lg-dock, lg-lens) *::after { box-sizing: border-box; }
 
 /* glass body over a backdrop */
-.lg-surface { position: absolute; inset: calc(-1 * var(--lg-bleed, 16px)); pointer-events: none; z-index: 0; }
-.lg-surface__glass { position: absolute; inset: 0; overflow: hidden; }
-.lg-surface__glass--fallback { inset: auto; left: 0; top: 0; overflow: visible; backdrop-filter: var(--lg-fallback); -webkit-backdrop-filter: var(--lg-fallback); }
+.lg-surface { position: absolute; inset: calc(var(--lg-edge-t, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-r, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-b, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-l, 0px) - var(--lg-bleed, 16px)); pointer-events: none; z-index: 0; }
+.lg-surface__glass { position: absolute; inset: calc(-1 * var(--lg-edge-t, 0px)) calc(-1 * var(--lg-edge-r, 0px)) calc(-1 * var(--lg-edge-b, 0px)) calc(-1 * var(--lg-edge-l, 0px)); overflow: hidden; }
+.lg-surface__glass--fallback { inset: auto; left: calc(-1 * var(--lg-edge-l, 0px)); top: calc(-1 * var(--lg-edge-t, 0px)); overflow: visible; backdrop-filter: var(--lg-fallback); -webkit-backdrop-filter: var(--lg-fallback); }
 .lg-surface__copy { position: absolute; left: 0; top: 0; display: block; max-width: none; max-height: none; margin: 0; }
-.lg-surface__shadow, .lg-surface__tint { position: absolute; left: 0; top: 0; }
+.lg-surface__shadow, .lg-surface__tint { position: absolute; left: calc(-1 * var(--lg-edge-l, 0px)); top: calc(-1 * var(--lg-edge-t, 0px)); }
 .lg-surface__shadow { box-shadow: var(--lg-shadow-2); }
 .lg-surface__tint { background: var(--lg-tint); }
 
@@ -292,8 +292,41 @@ const surfaces = new Set();
 // Measure every surface before writing to any: interleaved reads and writes would force one layout
 // per surface instead of one for the whole batch.
 function syncAll(list) {
-  const metrics = list.map((s) => s.measure());
+  const page = readPage();
+  const metrics = list.map((s) => s.measure(page));
   list.forEach((s, i) => s.apply(metrics[i]));
+}
+
+// The page's own size, without content that overflows it, and the side it scrolls towards.
+function readPage() {
+  const d = document.documentElement;
+  return {
+    viewport: d.clientWidth,
+    width: Math.max(d.clientWidth, d.offsetWidth),
+    height: Math.max(d.clientHeight, d.offsetHeight),
+    rtl: getComputedStyle(d).direction === 'rtl',
+  };
+}
+
+// The bleed is only painted inside the lens, but its box still counts as page content: glass within
+// `bleed` of the page's right edge (left in RTL) or bottom would make the page scroll. On such a side
+// the surface is pulled in to end at the page edge and clipped there, so only what lies outside the
+// page is cut. Clipping is per axis, so on the opposite side, which never scrolls, the surface is
+// pushed out by SHADOW_ROOM to keep the shadow whole. The --lg-edge-* insets move the surface box;
+// its children are offset back by the same amounts and keep their place and size.
+const SHADOW_ROOM = 64;
+function edgeInsets(rect, bleed, page) {
+  const cut = (room) => (room >= 0 && room < bleed ? bleed - room : 0);
+  const e = { t: 0, r: 0, b: 0, l: 0, x: false, y: false };
+  const side = page.rtl ? cut(rect.left + scrollX - (page.viewport - page.width)) : cut(page.width - rect.right - scrollX);
+  if (side) {
+    e.x = true;
+    if (page.rtl) [e.l, e.r] = [side, -SHADOW_ROOM];
+    else [e.l, e.r] = [-SHADOW_ROOM, side];
+  }
+  const bottom = cut(page.height - rect.bottom - scrollY);
+  if (bottom) [e.y, e.t, e.b] = [true, -SHADOW_ROOM, bottom];
+  return e;
 }
 
 let syncFrame = 0;
@@ -342,6 +375,7 @@ class Surface {
     this.delta = { x: 0, y: 0, w: 0, h: 0 };
     this.root = el('span', 'lg-surface', { 'aria-hidden': 'true' });
     this.root.style.setProperty('--lg-bleed', `${bleed}px`);
+    this.edgeKey = '';
     this.shadow = el('span', 'lg-surface__shadow');
     this.layer = el('span', 'lg-surface__glass');
     this.tint = el('span', 'lg-surface__tint');
@@ -382,6 +416,7 @@ class Surface {
     this.copy = null;
     this.mode = null;
     this.lastKey = this.alignKey = null;
+    this.setEdge(null);
   }
 
   /** Grow/shift the glass relative to the host box (press squish, open animations). */
@@ -395,20 +430,40 @@ class Surface {
   }
 
   /** Read the layout this surface depends on, without writing anything. */
-  measure() {
+  measure(page = readPage()) {
     const W = this.host.offsetWidth;
     const H = this.host.offsetHeight;
     if (!W || !H) return null;
-    if (this.mode !== 'copy') return { W, H };
+    const m = { W, H, edge: edgeInsets(this.host.getBoundingClientRect(), this.bleed, page) };
     // Nothing apply() writes moves the layer (place() sizes the shadow and tint; the glass sets the
-    // layer's filter and clip-path), so these read the same as they did after the writes.
-    return { W, H, layer: this.layer.getBoundingClientRect(), source: this.source.getBoundingClientRect() };
+    // layer's filter and clip-path; edge insets are offset on the layer), so these read the same as
+    // they did after the writes.
+    if (this.mode === 'copy') {
+      m.layer = this.layer.getBoundingClientRect();
+      m.source = this.source.getBoundingClientRect();
+    }
+    return m;
+  }
+
+  // Surfaces away from the page edges keep no inline insets or clipping at all.
+  setEdge(e) {
+    const key = e && (e.x || e.y) ? `${e.t}|${e.r}|${e.b}|${e.l}|${e.x}|${e.y}` : '';
+    if (key === this.edgeKey) return;
+    this.edgeKey = key;
+    const s = this.root.style;
+    for (const k of ['t', 'r', 'b', 'l']) {
+      if (key) s.setProperty(`--lg-edge-${k}`, `${e[k]}px`);
+      else s.removeProperty(`--lg-edge-${k}`);
+    }
+    s.overflowX = key && e.x ? 'clip' : '';
+    s.overflowY = key && e.y ? 'clip' : '';
   }
 
   /** Write the geometry from measure(). Unchanged values are not written. */
   apply(m) {
     if (!m) return;
     const { W, H } = m;
+    this.setEdge(m.edge);
     const d = this.delta;
     const x = this.bleed + d.x;
     const y = this.bleed + d.y;
