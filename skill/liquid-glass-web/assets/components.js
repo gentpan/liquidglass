@@ -50,7 +50,8 @@ lg-switch, lg-slider, lg-segmented, lg-button, lg-panel, lg-navbar, lg-menubar, 
 /* glass body over a backdrop */
 .lg-surface { position: absolute; inset: calc(var(--lg-edge-t, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-r, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-b, 0px) - var(--lg-bleed, 16px)) calc(var(--lg-edge-l, 0px) - var(--lg-bleed, 16px)); pointer-events: none; z-index: 0; }
 .lg-surface__glass { position: absolute; inset: calc(-1 * var(--lg-edge-t, 0px)) calc(-1 * var(--lg-edge-r, 0px)) calc(-1 * var(--lg-edge-b, 0px)) calc(-1 * var(--lg-edge-l, 0px)); overflow: hidden; }
-.lg-surface__glass--fallback { inset: auto; left: calc(-1 * var(--lg-edge-l, 0px)); top: calc(-1 * var(--lg-edge-t, 0px)); overflow: visible; backdrop-filter: var(--lg-fallback); -webkit-backdrop-filter: var(--lg-fallback); }
+.lg-surface__glass--backdrop, .lg-surface__glass--fallback { inset: auto; left: calc(-1 * var(--lg-edge-l, 0px)); top: calc(-1 * var(--lg-edge-t, 0px)); overflow: visible; }
+.lg-surface__glass--fallback { backdrop-filter: var(--lg-fallback); -webkit-backdrop-filter: var(--lg-fallback); }
 .lg-surface__copy { position: absolute; left: 0; top: 0; display: block; max-width: none; max-height: none; margin: 0; }
 .lg-surface__shadow, .lg-surface__tint { position: absolute; left: calc(-1 * var(--lg-edge-l, 0px)); top: calc(-1 * var(--lg-edge-t, 0px)); }
 .lg-surface__shadow { box-shadow: var(--lg-shadow-2); }
@@ -365,17 +366,23 @@ if (typeof window !== 'undefined') {
  *   backdrop — backdrop-filter: url(). Chromium only.
  *   fallback — backdrop-filter blur, for WebKit/Gecko with no known backdrop.
  */
+const ZERO_DELTA = Object.freeze({ x: 0, y: 0, w: 0, h: 0 });
+
 class Surface {
-  constructor(host, { radius = 16, bleed = 16, optics: o = {}, owner = host } = {}) {
+  constructor(host, { radius = 16, bleed = 16, optics: o = {}, owner = host, transformPress = false } = {}) {
     this.host = host;
     this.owner = owner; // element carrying the backdrop attribute
     this.radius = radius;
+    this.baseBleed = bleed;
     this.bleed = bleed;
+    this.pressTransform = !!transformPress;
+    this.useTransformPress = false;
     this.optics = o;
     this.delta = { x: 0, y: 0, w: 0, h: 0 };
     this.root = el('span', 'lg-surface', { 'aria-hidden': 'true' });
     this.root.style.setProperty('--lg-bleed', `${bleed}px`);
     this.edgeKey = '';
+    this.transformKey = '';
     this.shadow = el('span', 'lg-surface__shadow');
     this.layer = el('span', 'lg-surface__glass');
     this.tint = el('span', 'lg-surface__tint');
@@ -396,11 +403,17 @@ class Surface {
       if (this.source instanceof HTMLImageElement && !this.source.complete) this.source.addEventListener('load', requestSync, { once: true });
     } else if (engine === 'blink') {
       this.mode = 'backdrop';
-      this.glass = createGlass(this.layer, { ...this.optics, chroma: 0, mode: 'backdrop', clip: true });
+      this.layer.classList.add('lg-surface__glass--backdrop');
+      this.glass = createGlass(this.layer, { ...this.optics, chroma: 0, mode: 'backdrop', fit: true });
     } else {
       this.mode = 'fallback';
       this.layer.classList.add('lg-surface__glass--fallback');
     }
+    // Backdrop/fallback buttons do not need surrounding bleed pixels at rest:
+    // composite press deformation via GPU transform on `.lg-surface` instead.
+    this.useTransformPress = this.pressTransform && this.mode !== 'copy';
+    this.bleed = this.useTransformPress ? 0 : this.baseBleed;
+    this.root.style.setProperty('--lg-bleed', `${this.bleed}px`);
     observeHost(this);
     surfaces.add(this);
   }
@@ -410,11 +423,16 @@ class Surface {
     this.glass = null;
     unobserveHost(this);
     surfaces.delete(this);
-    this.layer.classList.remove('lg-surface__glass--fallback');
+    this.layer.classList.remove('lg-surface__glass--backdrop', 'lg-surface__glass--fallback');
     this.layer.removeAttribute('style');
     this.layer.replaceChildren();
     this.copy = null;
     this.mode = null;
+    this.useTransformPress = false;
+    this.bleed = this.baseBleed;
+    this.root.style.setProperty('--lg-bleed', `${this.baseBleed}px`);
+    this.root.style.transform = '';
+    this.transformKey = '';
     this.lastKey = this.alignKey = null;
     this.setEdge(null);
   }
@@ -464,19 +482,35 @@ class Surface {
     if (!m) return;
     const { W, H } = m;
     this.setEdge(m.edge);
-    const d = this.delta;
+    let d = this.delta;
+    if (this.useTransformPress) {
+      const sx = Math.max(1, W + d.w) / W;
+      const sy = Math.max(1, H + d.h) / H;
+      const tx = d.x + d.w / 2;
+      const ty = d.y + d.h / 2;
+      const nextTransform = d.x || d.y || d.w || d.h ? `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})` : '';
+      if (nextTransform !== this.transformKey) {
+        this.transformKey = nextTransform;
+        this.root.style.transform = nextTransform;
+      }
+      d = ZERO_DELTA;
+    }
     const x = this.bleed + d.x;
     const y = this.bleed + d.y;
     const w = Math.max(1, W + d.w);
     const h = Math.max(1, H + d.h);
     const r = Math.min(this.radius, w / 2, h / 2);
-    const key = `${x}|${y}|${w}|${h}|${r}`;
+    const mapR = Math.min(this.radius, W / 2, H / 2);
+    const key = `${x}|${y}|${w}|${h}|${r}|${W}|${H}|${mapR}`;
     if (key !== this.lastKey) {
       this.lastKey = key;
       place(this.shadow, x, y, w, h, r);
       place(this.tint, x, y, w, h, r);
       if (this.mode === 'fallback') place(this.layer, x, y, w, h, r);
-      else this.glass?.update({ x, y, width: w, height: h, radius: r });
+      else if (this.mode === 'backdrop') {
+        place(this.layer, x, y, w, h, r);
+        this.glass?.update({ width: w, height: h, radius: r, mapWidth: W, mapHeight: H, mapRadius: mapR });
+      } else this.glass?.update({ x, y, width: w, height: h, radius: r, mapWidth: W, mapHeight: H, mapRadius: mapR });
     }
     if (this.mode === 'copy') this.align(m.layer, m.source);
   }
@@ -598,7 +632,9 @@ class LgSwitch extends LgElement {
     const left = 20 + 24 * this.x - w / 2;
     const top = 14 - h / 2;
     this.firstChild.lastChild.style.setProperty('--p', this.x.toFixed(3));
-    this.glass.update({ x: left + 16, y: top + 16, width: w, height: h, radius: h / 2 });
+    const mapW = this.p > 0.5 ? 54 : 36;
+    const mapH = this.p > 0.5 ? 36 : 24;
+    this.glass.update({ x: left + 16, y: top + 16, width: w, height: h, radius: h / 2, mapWidth: mapW, mapHeight: mapH, mapRadius: mapH / 2 });
     place(this.thumb, left, top, w, h, h / 2);
     place(this.shadow, left, top, w, h, h / 2);
     this.thumb.style.opacity = String(1 - this.p);
@@ -693,7 +729,9 @@ class LgSlider extends LgElement {
     const left = 18 + this.t * (width - 36) - w / 2;
     const top = 18 - h / 2;
     this.control.style.setProperty('--t', this.t.toFixed(4));
-    this.glass.update({ x: left + 16, y: top + 16, width: w, height: h, radius: h / 2 });
+    const mapW = this.p > 0.5 ? 52 : 36;
+    const mapH = this.p > 0.5 ? 34 : 24;
+    this.glass.update({ x: left + 16, y: top + 16, width: w, height: h, radius: h / 2, mapWidth: mapW, mapHeight: mapH, mapRadius: mapH / 2 });
     place(this.thumb, left, top, w, h, h / 2);
     place(this.shadow, left, top, w, h, h / 2);
     this.thumb.style.opacity = String(1 - this.p);
@@ -811,7 +849,8 @@ class LgSegmented extends LgElement {
     const left = this.x - stretch / 2;
     const top = first.offsetTop + (first.offsetHeight - h) / 2;
     const r = parseFloat(getComputedStyle(first).borderTopLeftRadius) || 8;
-    this.glass.update({ x: left, y: top, width: w, height: h, radius: r });
+    const target = this.buttons[this.index] ?? first;
+    this.glass.update({ x: left, y: top, width: w, height: h, radius: r, mapWidth: target.offsetWidth, mapHeight: first.offsetHeight, mapRadius: r });
     place(this.shadow, left, top, w, h, r);
   }
 }
@@ -833,7 +872,7 @@ class LgButton extends LgElement {
     label.append(...this.childNodes);
     this.button.append(label);
     this.replaceChildren(this.button);
-    this.surface = new Surface(this.button, { owner: this, radius: radiusOf(this, Infinity), bleed: 12, optics: optics(this, { refraction: 14, bezel: 0.8, curvature: 3, chroma: 0.12, specular: 0.6, specularWidth: 1.5 }) });
+    this.surface = new Surface(this.button, { owner: this, radius: radiusOf(this, Infinity), bleed: 12, transformPress: true, optics: optics(this, { refraction: 14, bezel: 0.8, curvature: 3, chroma: 0.12, specular: 0.6, specularWidth: 1.5 }) });
     pressSpring(this.button, (p) => this.surface.setDelta({ x: -5 * p, y: 2 * p, w: 10 * p, h: -4 * p }));
   }
   attach() {
@@ -959,7 +998,9 @@ class LgNavbar extends LgElement {
     const h = first.offsetHeight - stretch * 0.2;
     const left = this.x - stretch / 2;
     const top = first.offsetTop + (first.offsetHeight - h) / 2;
-    this.glass.update({ x: left, y: top, width: w, height: h, radius: h / 2 });
+    const active = this.links[this.target ?? this.current] ?? first;
+    const mapH = first.offsetHeight;
+    this.glass.update({ x: left, y: top, width: w, height: h, radius: h / 2, mapWidth: active.offsetWidth, mapHeight: mapH, mapRadius: mapH / 2 });
     place(this.shadow, left, top, w, h, h / 2);
   }
 }
@@ -1138,7 +1179,7 @@ class LgMenu extends LgElement {
     const x = item.offsetLeft - stretch / 2;
     const y = this.row.y - stretch * 0.25;
     // the copy sits 6px inside the panel (its padding), so lens coords are relative to the copy
-    this.lens.update({ hidden: false, x, y, width: w, height: h, radius: 8 });
+    this.lens.update({ hidden: false, x, y, width: w, height: h, radius: 8, mapWidth: item.offsetWidth, mapHeight: item.offsetHeight, mapRadius: 8 });
     place(this.shadow, x + 6, y + 6, w, h, 8);
   }
 }
@@ -1286,7 +1327,7 @@ class LgDock extends LgElement {
     const size = H * lerp(0.7, 1, p);
     const x = clamp(this.pos - size / 2, 0, this.items.offsetWidth - size);
     const y = (H - size) / 2;
-    this.lens.update({ hidden: false, x, y, width: size, height: size, radius: size / 2 });
+    this.lens.update({ hidden: false, x, y, width: size, height: size, radius: size / 2, mapWidth: H, mapHeight: H, mapRadius: H / 2 });
     place(this.shadow, x + this.items.offsetLeft, y + this.items.offsetTop, size, size, size / 2);
     this.shadow.style.opacity = String(p);
   }
@@ -1377,8 +1418,9 @@ class LgLens extends LgElement {
     const h = this.size.h * (1 - 0.05 * this.press);
     const x = clamp(this.pos.x - w / 2, 0, this.clientWidth - w);
     const y = clamp(this.pos.y - h / 2, 0, this.clientHeight - h);
-    const r = Math.min(radiusOf(this, Math.min(this.size.w, this.size.h) / 2), w / 2, h / 2);
-    this.glass.update({ x, y, width: w, height: h, radius: r });
+    const baseR = Math.min(radiusOf(this, Math.min(this.size.w, this.size.h) / 2), this.size.w / 2, this.size.h / 2);
+    const r = Math.min(baseR, w / 2, h / 2);
+    this.glass.update({ x, y, width: w, height: h, radius: r, mapWidth: this.size.w, mapHeight: this.size.h, mapRadius: baseR });
     place(this.shadow, x, y, w, h, r);
   }
 }
