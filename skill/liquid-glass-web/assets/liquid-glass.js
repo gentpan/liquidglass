@@ -16,6 +16,7 @@
 const NS = 'http://www.w3.org/2000/svg';
 const XLINK = 'http://www.w3.org/1999/xlink';
 const NEUTRAL = 128;
+const MAX_RIM = 1.3;
 const MAP_CACHE_SIZE = 48;
 
 export const DEFAULTS = Object.freeze({
@@ -25,6 +26,12 @@ export const DEFAULTS = Object.freeze({
   width: 120,
   height: 64,
   radius: 32,
+  // Optional overrides for the cached displacement map dimensions (0 / -1 = match lens geometry).
+  // Allows stretch/press animations to scale a cached map via feImage preserveAspectRatio="none"
+  // instead of re-encoding a new PNG every frame.
+  mapWidth: 0,
+  mapHeight: 0,
+  mapRadius: -1,
   // Optics.
   refraction: 18, // maximum bend at the rim, CSS px
   bezel: 0.6, // curved rim width as a fraction of the lens half-size (min side); 1 = full dome
@@ -36,12 +43,12 @@ export const DEFAULTS = Object.freeze({
   specular: 0.45, // rim highlight 0..1. 0 skips the pass
   specularWidth: 2, // rim highlight width, CSS px
   lightAngle: -120, // degrees; 0 = light from the right, -90 = from the top. The lit rim is brightest, the far rim reflects dimly
-  mapScale: 0, // map pixels per CSS px; 0 = devicePixelRatio capped at 2
+  mapScale: 0, // map pixels per CSS px; 0 = devicePixelRatio capped at 2 (auto-capped on wide surfaces)
 });
 
-// Keys that change the displacement map itself. Everything else (position, strength) is a cheap
-// attribute update on an existing filter.
-const MAP_KEYS = ['width', 'height', 'radius', 'bezel', 'curvature', 'ior', 'invert', 'specular', 'specularWidth', 'lightAngle'];
+// Keys that change the displacement map itself. Everything else (position, refraction, specular)
+// is a cheap attribute update on an existing filter.
+const MAP_KEYS = ['bezel', 'curvature', 'ior', 'invert', 'specularWidth', 'lightAngle'];
 
 export const engine = detectEngine();
 
@@ -93,7 +100,7 @@ function profileTable(curvature, ior) {
  * Returns { canvas, width, height, scale } — usable by the SVG path (as a data URL) and by WebGL
  * (as a texture), so both renderers share one optical model.
  */
-export function renderLensMap(options = {}, scale = 1) {
+export function renderLensMap(options = {}, scale = 1, { opaque = false, normalizedSpecular = false } = {}) {
   const p = { ...DEFAULTS, ...options };
   const w = Math.max(2, Math.round(p.width * scale));
   const h = Math.max(2, Math.round(p.height * scale));
@@ -103,6 +110,16 @@ export function renderLensMap(options = {}, scale = 1) {
   const ctx = canvas.getContext('2d');
   const image = ctx.createImageData(w, h);
   const px = image.data;
+  if (opaque) {
+    // Pre-fill outside pixels with opaque neutral grey (no displacement, zero rim) so clipped
+    // filters do not need feFlood + feComposite(over) passes on every frame.
+    for (let o = 0; o < px.length; o += 4) {
+      px[o] = NEUTRAL;
+      px[o + 1] = NEUTRAL;
+      px[o + 2] = NEUTRAL;
+      px[o + 3] = 255;
+    }
+  }
 
   const sx = p.width / w; // CSS px per map pixel (x); equals 1 / scale up to rounding
   const sy = p.height / h;
@@ -156,23 +173,27 @@ export function renderLensMap(options = {}, scale = 1) {
       const s = inset / bezel;
       const m = s >= 1 ? 0 : table[Math.min(N, Math.round(s * N))];
       // Convex glass samples from further inside (towards the centre) near the rim.
-      const bx = Math.round(127 * m * nx * dir);
-      const by = Math.round(127 * m * ny * dir);
+      const k = opaque ? alpha : 1;
+      const bx = Math.round(127 * m * nx * dir * k);
+      const by = Math.round(127 * m * ny * dir * k);
 
       // Rim highlight: a crisp line plus a softer inner glow, brightest where the rim faces the
-      // light, with a dimmer reflection on the far side.
+      // light, with a dimmer reflection on the far side. When normalizedSpecular is set (used by
+      // createGlass), the unscaled rim shape is normalised by MAX_RIM so feColorMatrix can vary
+      // specular dynamically without re-encoding the PNG.
       const crisp = Math.max(0, 1 - inset / rimWidth);
       const glow = Math.max(0, 1 - inset / (rimWidth * 5));
-      const rim = p.specular * (crisp * crisp + 0.3 * glow * glow);
-      const a = Math.round(alpha * 255);
+      const baseRim = crisp * crisp + 0.3 * glow * glow;
+      const rim = normalizedSpecular ? baseRim / MAX_RIM : p.specular * baseRim;
+      const a = opaque ? 255 : Math.round(alpha * 255);
 
       const i2 = w - 1 - i;
       const j2 = h - 1 - j;
       // top-left: outward normal (-nx, -ny); sample towards +x/+y (inward)
-      write(px, (j * w + i) * 4, NEUTRAL + bx, NEUTRAL + by, rimLight(rim, -nx * lx - ny * ly), a);
-      if (i2 !== i) write(px, (j * w + i2) * 4, NEUTRAL - bx, NEUTRAL + by, rimLight(rim, nx * lx - ny * ly), a);
-      if (j2 !== j) write(px, (j2 * w + i) * 4, NEUTRAL + bx, NEUTRAL - by, rimLight(rim, -nx * lx + ny * ly), a);
-      if (i2 !== i && j2 !== j) write(px, (j2 * w + i2) * 4, NEUTRAL - bx, NEUTRAL - by, rimLight(rim, nx * lx + ny * ly), a);
+      write(px, (j * w + i) * 4, NEUTRAL + bx, NEUTRAL + by, rimLight(rim, -nx * lx - ny * ly, k), a);
+      if (i2 !== i) write(px, (j * w + i2) * 4, NEUTRAL - bx, NEUTRAL + by, rimLight(rim, nx * lx - ny * ly, k), a);
+      if (j2 !== j) write(px, (j2 * w + i) * 4, NEUTRAL + bx, NEUTRAL - by, rimLight(rim, -nx * lx + ny * ly, k), a);
+      if (i2 !== i && j2 !== j) write(px, (j2 * w + i2) * 4, NEUTRAL - bx, NEUTRAL - by, rimLight(rim, nx * lx + ny * ly, k), a);
     }
   }
   ctx.putImageData(image, 0, 0);
@@ -180,9 +201,9 @@ export function renderLensMap(options = {}, scale = 1) {
 }
 
 // Blue channel for a rim pixel: `facing` is n·L for its outward normal.
-function rimLight(rim, facing) {
+function rimLight(rim, facing, weight = 1) {
   const shade = 0.12 + 0.88 * (facing > 0 ? facing : -0.4 * facing);
-  return NEUTRAL + Math.round(127 * Math.min(1, rim * shade));
+  return NEUTRAL + Math.round(127 * Math.min(1, rim * shade) * weight);
 }
 
 function write(px, o, r, g, b, a) {
@@ -194,19 +215,19 @@ function write(px, o, r, g, b, a) {
 
 const mapCache = new Map();
 
-function mapKeyOf(p, scale) {
-  return MAP_KEYS.map((k) => p[k]).join('|') + '|' + scale;
+function mapKeyOf(p, mapW, mapH, mapR, scale, opaque) {
+  return `${mapW}|${mapH}|${mapR}|` + MAP_KEYS.map((k) => p[k]).join('|') + `|${scale}|${opaque ? 1 : 0}`;
 }
 
 // Returns { key, url, decoded, ready }. The PNG is decoded through an <img> before the filter uses
 // it: feImage loads data URLs asynchronously, and WebKit caches whatever the filter produced while
 // the image was still missing (an empty result) until the filter id changes.
-function lensMap(p, scale, key) {
+function lensMap(p, mapW, mapH, mapR, scale, opaque, key) {
   let entry = mapCache.get(key);
   if (entry) {
     mapCache.delete(key); // refresh LRU position
   } else {
-    const url = renderLensMap(p, scale).canvas.toDataURL('image/png');
+    const url = renderLensMap({ ...p, width: mapW, height: mapH, radius: mapR }, scale, { opaque, normalizedSpecular: true }).canvas.toDataURL('image/png');
     entry = { key, url, decoded: false, ready: null };
     const img = new Image();
     img.src = url;
@@ -259,7 +280,7 @@ const CHANNELS = [
 //   refracted  = feDisplacementMap(source, bend)           (x3 with per-channel scale when chroma > 0)
 //   lit        = refracted + white * (2 * map.b - 1)        (rim highlight from the blue channel)
 //   result     = (lit IN lensShape) OVER (source OUT lensShape)
-function buildGraph(filter, p) {
+function buildGraph(filter, p, { clipped = false } = {}) {
   filter.replaceChildren();
   const lensRect = [];
   const add = (name, attrs, inLens) => {
@@ -269,9 +290,17 @@ function buildGraph(filter, p) {
     return n;
   };
 
-  add('feFlood', { 'flood-color': 'rgb(128,128,128)', 'flood-opacity': '1', result: 'neutral' }, true);
-  const image = add('feImage', { preserveAspectRatio: 'none', result: 'lensShape' }, true);
-  add('feComposite', { in: 'lensShape', in2: 'neutral', operator: 'over', result: 'map' }, true);
+  let image;
+  if (clipped) {
+    // These lenses already clip outside the rounded rect via CSS clip-path or border-radius,
+    // and bake the neutral grey backing into the PNG: skip feFlood + feComposite(over) and the three
+    // trailing in/out/over composites (9-10 passes -> 4-5 passes, pixel-equivalent inside the lens).
+    image = add('feImage', { preserveAspectRatio: 'none', result: 'map' }, true);
+  } else {
+    add('feFlood', { 'flood-color': 'rgb(128,128,128)', 'flood-opacity': '1', result: 'neutral' }, true);
+    image = add('feImage', { preserveAspectRatio: 'none', result: 'lensShape' }, true);
+    add('feComposite', { in: 'lensShape', in2: 'neutral', operator: 'over', result: 'map' }, true);
+  }
   const aspect = engine === 'webkit' ? add('feColorMatrix', { in: 'map', type: 'matrix', result: 'bend' }, true) : null;
   const bendMap = aspect ? 'bend' : 'map';
 
@@ -298,16 +327,19 @@ function buildGraph(filter, p) {
   }
 
   let lit = 'refracted';
+  let rim = null;
   if (p.specular > 0) {
-    add('feColorMatrix', { in: 'map', type: 'matrix', values: `0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 2 0 ${-(2 * NEUTRAL) / 255}`, result: 'rim' }, true);
+    rim = add('feColorMatrix', { in: 'map', type: 'matrix', result: 'rim' }, true);
     add('feComposite', { in: 'rim', in2: 'refracted', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'lit' }, true);
     lit = 'lit';
   }
 
-  add('feComposite', { in: lit, in2: 'lensShape', operator: 'in', result: 'lens' }, true);
-  add('feComposite', { in: 'SourceGraphic', in2: 'lensShape', operator: 'out', result: 'outside' });
-  add('feComposite', { in: 'lens', in2: 'outside', operator: 'over' });
-  return { image, aspect, blur, displace, lensRect };
+  if (!clipped) {
+    add('feComposite', { in: lit, in2: 'lensShape', operator: 'in', result: 'lens' }, true);
+    add('feComposite', { in: 'SourceGraphic', in2: 'lensShape', operator: 'out', result: 'outside' });
+    add('feComposite', { in: 'lens', in2: 'outside', operator: 'over' });
+  }
+  return { image, aspect, blur, displace, rim, lensRect };
 }
 
 // With primitiveUnits="objectBoundingBox" (the only units WebKit renders — userSpaceOnUse turns the
@@ -417,7 +449,7 @@ export function createGlass(target, options = {}) {
     graph.image.setAttribute('href', entry.url);
     graph.image.setAttributeNS(XLINK, 'xlink:href', entry.url);
     shown = { key: entry.key, seq };
-    settle();
+    if (engine === 'webkit') settle();
     return true;
   }
 
@@ -425,11 +457,15 @@ export function createGlass(target, options = {}) {
     frame = 0;
     if (destroyed || !active) return;
     if (flags.hidden) {
-      if (useBackdropURL) target.style.backdropFilter = '';
-      else target.style.filter = '';
-      if (flags.clip) target.style.clipPath = 'inset(50%)';
+      if (useBackdropURL) {
+        if (target.style.backdropFilter !== '') target.style.backdropFilter = '';
+      } else if (target.style.filter !== '') {
+        target.style.filter = '';
+      }
+      if (flags.clip && target.style.clipPath !== 'inset(50%)') target.style.clipPath = 'inset(50%)';
       return;
     }
+    if (box.width < 1 || box.height < 1) box = { width: target.offsetWidth, height: target.offsetHeight };
     const W = box.width;
     const H = box.height;
     if (W < 1 || H < 1) return; // not laid out yet; the ResizeObserver will call back
@@ -441,16 +477,39 @@ export function createGlass(target, options = {}) {
     }
     if (p.width < 1 || p.height < 1) return;
 
-    const s = `${p.chroma > 0}|${p.blur > 0}|${p.specular > 0}`;
+    // Fit only sets the geometry. A fitted backdrop can use the border-radius clip when it matches
+    // the lens. Chromium's backdrop-filter: url() can ignore clip-path's rounded corners, so
+    // blurred backdrops without a matching border-radius still need the alpha mask.
+    let clipped = flags.clip && !(useBackdropURL && p.blur > 0);
+    if (!clipped && useBackdropURL && flags.fit) {
+      const radius = Math.max(0, Math.min(p.radius, W / 2, H / 2));
+      const { borderRadius, cornerShape } = getComputedStyle(target);
+      clipped = borderRadius === `${radius}px` &&
+        (!cornerShape || cornerShape === 'round' || cornerShape === 'superellipse(1)');
+    }
+    const s = `${p.chroma > 0}|${p.blur > 0}|${p.specular > 0}|${clipped}`;
     if (s !== structure) {
-      graph = buildGraph(filter, p);
+      graph = buildGraph(filter, p, { clipped });
       structure = s;
       shown = { key: '', seq: -1 };
       wanted = '';
     }
 
     const dpr = window.devicePixelRatio || 1;
-    const scale = p.mapScale > 0 ? p.mapScale : Math.min(dpr, 2);
+    const mapW = p.mapWidth > 0 ? p.mapWidth : p.width;
+    const mapH = p.mapHeight > 0 ? p.mapHeight : p.height;
+    const mapR = p.mapRadius >= 0 ? p.mapRadius : p.radius;
+    const baseScale = p.mapScale > 0 ? p.mapScale : Math.min(dpr, 2);
+    // Wide floating surfaces (e.g. a 1376x64 bar at 2x DPR = 2752x128) cross GPU texture tile
+    // limits (>2048px) and stall Skia/OpenGL backdrop compositing on every scroll frame. Keep small
+    // buttons/controls at full 2x DPR for crisp curved rims, and step large surfaces down cleanly to
+    // 1x (or <=1536px / <=131072px) to avoid fractional-scale rim moire and texture thrashing.
+    const maxDim = Math.max(mapW, mapH, 1);
+    const area = Math.max(mapW * mapH, 1);
+    let scale = baseScale;
+    if (p.mapScale <= 0 && (maxDim * baseScale > 1024 || area * baseScale * baseScale > 131072)) {
+      scale = maxDim <= 1536 && area <= 131072 ? Math.min(baseScale, 1) : Math.min(baseScale, 1536 / maxDim, Math.sqrt(131072 / area));
+    }
     // Snap the lens to device pixels: fractional sub-regions shimmer while the lens moves.
     const snap = (v) => Math.round(v * dpr) / dpr;
     const x = snap(p.x);
@@ -458,10 +517,10 @@ export function createGlass(target, options = {}) {
     const w = snap(p.width);
     const h = snap(p.height);
 
-    const key = mapKeyOf(p, scale);
+    const key = mapKeyOf(p, mapW, mapH, mapR, scale, clipped);
     if (wanted !== key) {
       wanted = key;
-      const entry = lensMap(p, scale, key);
+      const entry = lensMap(p, mapW, mapH, mapR, scale, clipped, key);
       const seq = ++requested;
       if (entry.decoded) show(entry, seq);
       // While a squish animation requests a new map every frame, show the newest map that has
@@ -470,7 +529,8 @@ export function createGlass(target, options = {}) {
     }
     if (flags.clip) {
       const r = Math.min(p.radius, w / 2, h / 2);
-      target.style.clipPath = `inset(${y}px ${W - x - w}px ${H - y - h}px ${x}px round ${r}px)`;
+      const nextClip = `inset(${y}px ${W - x - w}px ${H - y - h}px ${x}px round ${r}px)`;
+      if (target.style.clipPath !== nextClip) target.style.clipPath = nextClip;
     }
     if (!shown.key) return; // first map not ready yet: leave the element unfiltered
 
@@ -478,6 +538,11 @@ export function createGlass(target, options = {}) {
     const { scale: k, kx, ky } = bendScale(p.refraction, W, H);
     const scales = graph.displace.length === 3 ? [k, k * (1 + p.chroma / 2), k * (1 + p.chroma)] : [k];
     graph.displace.forEach((n, i) => n.setAttribute('scale', scales[i]));
+    if (graph.rim) {
+      const gain = 2 * MAX_RIM * p.specular;
+      const bias = (-(2 * NEUTRAL) / 255) * MAX_RIM * p.specular;
+      graph.rim.setAttribute('values', `0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 ${gain} 0 ${bias}`);
+    }
     if (graph.aspect) {
       graph.aspect.setAttribute('values', `${kx} 0 0 0 ${(1 - kx) / 2}  0 ${ky} 0 0 ${(1 - ky) / 2}  0 0 1 0 0  0 0 0 1 0`);
     }
@@ -488,11 +553,15 @@ export function createGlass(target, options = {}) {
     }
 
     // WebKit caches filter output per filter id and keeps serving it after the graph changes;
-    // a fresh id on every update forces it to re-read.
-    filter.id = `${base}-v${++version}`;
+    // a fresh id on every update forces it to re-read. Blink/Gecko repaint on attribute mutations,
+    // so keeping the id stable avoids destroying and recreating the compositor filter every frame.
+    if (!filter.id || engine === 'webkit') filter.id = `${base}-v${++version}`;
     const ref = `url(#${filter.id})`;
-    if (useBackdropURL) target.style.backdropFilter = ref;
-    else target.style.filter = ref;
+    if (useBackdropURL) {
+      if (target.style.backdropFilter !== ref) target.style.backdropFilter = ref;
+    } else if (target.style.filter !== ref) {
+      target.style.filter = ref;
+    }
   }
 
   function schedule() {
