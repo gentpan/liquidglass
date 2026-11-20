@@ -292,7 +292,7 @@ function buildGraph(filter, p, { clipped = false } = {}) {
 
   let image;
   if (clipped) {
-    // Clipped/fitted lenses already clip outside the rounded rect via CSS clip-path or border-radius,
+    // These lenses already clip outside the rounded rect via CSS clip-path or border-radius,
     // and bake the neutral grey backing into the PNG: skip feFlood + feComposite(over) and the three
     // trailing in/out/over composites (9-10 passes -> 4-5 passes, pixel-equivalent inside the lens).
     image = add('feImage', { preserveAspectRatio: 'none', result: 'map' }, true);
@@ -477,10 +477,16 @@ export function createGlass(target, options = {}) {
     }
     if (p.width < 1 || p.height < 1) return;
 
-    // Clipped/fitted lenses can skip feFlood + trailing in/out/over composites. Exception: in
-    // Chromium, backdrop-filter: url() clips to the rectangular inset of clip-path rather than its
-    // rounded corners, so blur > 0 with clip-only (no fit / border-radius) keeps the alpha mask.
-    const clipped = flags.fit || (flags.clip && !(useBackdropURL && p.blur > 0));
+    // Fit only sets the geometry. A fitted backdrop can use the border-radius clip when it matches
+    // the lens. Chromium's backdrop-filter: url() can ignore clip-path's rounded corners, so
+    // blurred backdrops without a matching border-radius still need the alpha mask.
+    let clipped = flags.clip && !(useBackdropURL && p.blur > 0);
+    if (!clipped && useBackdropURL && flags.fit) {
+      const radius = Math.max(0, Math.min(p.radius, W / 2, H / 2));
+      const { borderRadius, cornerShape } = getComputedStyle(target);
+      clipped = borderRadius === `${radius}px` &&
+        (!cornerShape || cornerShape === 'round' || cornerShape === 'superellipse(1)');
+    }
     const s = `${p.chroma > 0}|${p.blur > 0}|${p.specular > 0}|${clipped}`;
     if (s !== structure) {
       graph = buildGraph(filter, p, { clipped });
